@@ -116,6 +116,3 @@ statusCondPos = do
 test1 = runMassT (bayes statusCondPos)
 test2 = fmap (\ns -> [fromIntegral n / fromIntegral (sum ns) | n <- ns]) nsIO
   where nsIO = bayesMC 10000 statusCondPos
-
-guard' :: Alternative f => Bool -> f ()
-guard' = guard
