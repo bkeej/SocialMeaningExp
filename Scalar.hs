@@ -14,50 +14,49 @@ import           Utils
 
 -- Model-theoretic stuff
 
-data World = R1 | R2 | R3
+data World = N | S | A
   deriving (Show, Eq, Enum)
 
-data Message = Beard | Glasses | Tie
+data Message = Some | All | NullMsg
   deriving (Show, Eq, Enum)
 
 worldPrior :: Dist m => m World
-worldPrior = uniform [R1 ..]
+worldPrior = uniform [N ..]
 
 messagePrior :: Dist m => m Message
-messagePrior = uniform [Beard ..]
+messagePrior = uniform [Some ..]
 
 eval :: (Message, World) -> Bool
-eval (Beard,   R1) = True
-eval (Beard,   _ ) = False
-eval (Glasses, R3) = False
-eval (Glasses, _ ) = True
-eval (Tie,     R1) = False
-eval (Tie,     _ ) = True
+eval (Some   , N) = False
+eval (Some   , _) = True
+eval (All    , A) = True
+eval (All    , _) = False
+eval (NullMsg, _) = True
 
 -- Mutually recursive pragmatic reasoning
 
-speaker :: Int -> World -> BDDist Message
-speaker n w = lift . bayes $ do
-  m <- messagePrior
-  if n <= 0   -- literal speaker
-    then do
-      guard $ eval (m, w)
-      return m
-    else do   -- arbitarily pragmatic speaker
-      w' <- listener n m
-      guard $ w' == w
-      return m
-
 listener :: Int -> Message -> BDDist World
 listener n m = lift . bayes $ do
-  w  <- worldPrior
-  m' <- speaker (n-1) w
-  guard $ m' == m
-  return w
+  w <- worldPrior
+  if n <= 0   -- literal listener
+    then do
+      guard $ eval (m, w)
+      return w
+    else do   -- arbitarily pragmatic listener
+      m' <- speaker n w
+      guard $ m' == m
+      return w
+
+speaker :: Int -> World -> BDDist Message
+speaker n w = lift . bayes $ do
+  m  <- messagePrior
+  w' <- listener (n-1) m
+  guard $ w' == w
+  return m
 
 -- testing the model
 
-test = [[runMassT (runMaybeT (speaker n w)) | w <- [R1 ..]] | n <- [0..]]
+test = [[runMassT (runMaybeT (speaker n w)) | w <- [N ..]] | n <- [0..]]
 
 {-
  - test!!0 = literal speaker
