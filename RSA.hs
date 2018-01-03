@@ -1,6 +1,6 @@
 {-
  - Implements a simple IBR/RSA-type model using BDDist (Prob.hs), sans costs
- - and temperatures. See Monroe & Potts 2015 [^1] (Figure 1) for the model
+ - and temperatures. See Monroe & Potts 2015[^1] (Figure 1) for the model
  - assumed here. Running `test!!1` reproduces the table in their Figure (1d).
  -
  - [^1]: https://nlp.stanford.edu/pubs/monroe2015learning.pdf
