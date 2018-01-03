@@ -1,9 +1,9 @@
 {-
- - Implements a simple IBR/RSA-type model using BDDist (Prob.hs), sans costs
- - and temperatures. See Monroe & Potts 2015 [^1] (Figure 1) for the model
- - assumed here. Running `test!!1` reproduces the table in their Figure (1d).
+ - RSA model for scalar implicature, with a costly null message. See Potts et
+ - al. 2015[^1] (Figure 2) for the model assumed here. Running `test!!1`
+ - reproduces s_1 in the left-most column of their Figure 2.
  -
- - [^1]: https://nlp.stanford.edu/pubs/monroe2015learning.pdf
+ - Will eventually add lexical uncertainty, maybe fold `modify` into Util.
 -}
 
 import           Control.Monad
@@ -12,7 +12,9 @@ import           Control.Monad.Trans.Maybe
 import           Prob
 import           Utils
 
+--
 -- Model-theoretic stuff
+--
 
 data World = N | S | A
   deriving (Show, Eq, Enum)
@@ -26,6 +28,9 @@ worldPrior = uniform [N ..]
 messagePrior :: Dist m => m Message
 messagePrior = uniform [Some ..]
 
+cost NullMsg = 5
+cost _       = 0  -- coerced into Sum's by the compiler
+
 eval :: (Message, World) -> Bool
 eval (Some   , N) = False
 eval (Some   , _) = True
@@ -33,7 +38,13 @@ eval (All    , A) = True
 eval (All    , _) = False
 eval (NullMsg, _) = True
 
+--
 -- Mutually recursive pragmatic reasoning
+--
+
+modify :: (Prob -> Prob) -> BDDist a -> BDDist a
+modify f mx = MaybeT (MassT fd)
+  where fd = [Mass (f n) x | Mass n x <- runMassT (runMaybeT mx)]
 
 listener :: Int -> Message -> BDDist World
 listener n m = lift . bayes $ do
@@ -50,17 +61,18 @@ listener n m = lift . bayes $ do
 speaker :: Int -> World -> BDDist Message
 speaker n w = lift . bayes $ do
   m  <- messagePrior
-  w' <- listener (n-1) m
+  w' <- modify (\n -> exp (log n - cost m)) (listener (n-1) m)
   guard $ w' == w
   return m
 
--- testing the model
+--
+-- Testing the model
+--
 
 test = [[runMassT (runMaybeT (speaker n w)) | w <- [N ..]] | n <- [0..]]
 
 {-
- - test!!0 = literal speaker
- - test!!1 = pragmatic speaker
+ - test!!1 = pragmatic speaker (note: test!!0 == test!!1)
  - test!!n = n-pragmatic speaker
  - gets intractable around test!!5 (!)
 -}
