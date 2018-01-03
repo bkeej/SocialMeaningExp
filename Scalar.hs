@@ -29,7 +29,7 @@ messagePrior :: Dist m => m Message
 messagePrior = uniform [Some ..]
 
 cost NullMsg = 5
-cost _       = 0  -- coerced into Sum's by the compiler
+cost _       = 0  -- coerced into Sum's by the compiler?
 
 eval :: (Message, World) -> Bool
 eval (Some   , N) = False
@@ -61,7 +61,7 @@ listener n m = lift . bayes $ do
 speaker :: Int -> World -> BDDist Message
 speaker n w = lift . bayes $ do
   m  <- messagePrior
-  w' <- modify (\n -> exp (log n - cost m)) (listener (n-1) m)
+  w' <- modify (\w -> exp (log w - cost m)) (listener (n-1) m)
   guard $ w' == w
   return m
 
