@@ -1,7 +1,8 @@
 Some tools for probabilistic calculating and linguistic applications.
 
 Super preliminary for now --- at the moment, these are more learning tools for
-me than scientific tools for you.
+me than scientific tools for you. Apparently the only way I can learn new
+formal things these days is by forcing myself to code up an implementation. 🤫
 
 Maybe that will change soon! Some things I'll be adding in the near future:
 
