@@ -1,8 +1,9 @@
 Some tools for probabilistic calculating and linguistic applications.
 
 Super preliminary for now --- at the moment, these are more learning tools for
-me than scientific tools for you. Maybe that will change soon! Some things
-I'll be adding in the near future
+me than scientific tools for you.
+
+Maybe that will change soon! Some things I'll be adding in the near future:
 
 -   Costs and temperatures (may require `listen` and `tell` like
     functionality, making the underlying monadic structures even more
