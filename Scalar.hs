@@ -62,6 +62,7 @@ refineEval2 m
 lexiconPrior :: Dist m => m Lexicon
 lexiconPrior = uniform [eval, refineEval1, refineEval2]
 
+{-
 powersetPlus :: Eq a => [a] -> [[a]]
 powersetPlus = filter (/= []) . powerset
   where powerset []     = [[]]
@@ -69,6 +70,7 @@ powersetPlus = filter (/= []) . powerset
 
 refineEval :: Message -> [[World]]
 refineEval = powersetPlus . eval
+-}
 
 --
 -- Mutually recursive pragmatic reasoning
