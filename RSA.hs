@@ -12,7 +12,9 @@ import           Control.Monad.Trans.Maybe
 import           Prob
 import           Utils
 
+--
 -- Model-theoretic stuff
+--
 
 data World = R1 | R2 | R3
   deriving (Show, Eq, Enum)
@@ -34,7 +36,9 @@ eval (Glasses, _ ) = True
 eval (Tie,     R1) = False
 eval (Tie,     _ ) = True
 
+--
 -- Mutually recursive pragmatic reasoning
+--
 
 speaker :: Int -> World -> BDDist Message
 speaker n w = lift . bayes $ do
@@ -55,7 +59,9 @@ listener n m = lift . bayes $ do
   guard $ m' == m
   return w
 
--- testing the model
+--
+-- Testing the model
+--
 
 test = [[runMassT (runMaybeT (speaker n w)) | w <- [R1 ..]] | n <- [0..]]
 
