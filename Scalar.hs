@@ -4,6 +4,8 @@
  - reproduces s_1 in the left-most column of their Figure 2.
  -
  - Will eventually add lexical uncertainty, maybe fold `modify` into Util.
+ -
+ - [^1]: https://doi.org/10.1093/jos/ffv012
 -}
 
 import           Control.Monad
