@@ -18,7 +18,6 @@
 -}
 
 import           Control.Monad             (guard)
-import           Control.Monad.Trans.Class (lift)
 import           Control.Monad.Trans.Maybe (MaybeT (MaybeT, runMaybeT))
 import           Data.List                 (groupBy, sortBy)
 import           Prob
