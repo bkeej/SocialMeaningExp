@@ -1,24 +1,26 @@
 {-
- - RSA model for scalar implicature, with lexical uncertainty and null message
- - costs (but no temperature parameters).
+ - RSA model for scalar implicature, with lexical uncertainty and null-message
+ - costs (and an idle but fiddle-with-able temperature parameter).
  -
- - See Potts et al. 2015[^1] (Figure 2) for the model assumed here. Running
- - `disp_s1` reproduces table s_1 in the left-most column of their Figure 2
- - (page 773), modulo rounding. Running `disp_L` reproduces table L at the top
- - of their Figure 2, modulo rounding.
+ - The model defined below is intended to be equivalent to that of Potts et
+ - al. 2015[^1] (specifically, the extended model in their Appendix A, of
+ - which the model in the main text is a special case).
+ -
+ - Running `disp_s 1` reproduces table s_1 in the left-most column of their
+ - Figure 2 (page 773), and running `disp_L 1` reproduces table L at the top
+ - of their Figure 2 (modulo rounding).
  -
  - To do: Think about more principled and/or general approaches to `modify`,
- - `weightedEq`; look at local implicature generation; make sure that
- - refinements of null messages are immaterial (and think about how to
- - automatically generate refined lexica).
+ - `weightedEq`; look at local implicature generation; think about how to
+ - automatically generate refined lexica; play with exceptional implicature.
  -
  - [^1]: https://doi.org/10.1093/jos/ffv012
 -}
 
-import           Control.Monad
-import           Control.Monad.Trans.Class
-import           Control.Monad.Trans.Maybe
-import           Data.List
+import           Control.Monad             (guard)
+import           Control.Monad.Trans.Class (lift)
+import           Control.Monad.Trans.Maybe (MaybeT (MaybeT, runMaybeT))
+import           Data.List                 (groupBy, sortBy)
 import           Prob
 import           Utils
 
@@ -33,14 +35,16 @@ data Message = Some | All | Null
   deriving (Show, Eq, Enum, Ord)
 
 worldPrior :: Dist m => m World
-worldPrior = uniform [N ..]
+worldPrior = uniform [N ..]       -- The primitive notion in Potts et al. is a
+                                  -- prior over *sets* of worlds/states (i.e.,
+                                  -- propositions).
 
 messagePrior :: Dist m => m Message
-messagePrior = uniform [Some ..]
+messagePrior = uniform [Some ..]  -- No correspondent in Potts et al. Flat
+                                  -- here so makes no difference.
 
-cost :: Num a => Message -> a
-cost Null = 5
-cost _    = 0  -- coerced into Sum's by GHC?
+cost Null = 5   -- Only null messages incur costs
+cost _    = 0   -- Coerced into Sum's by GHC?
 
 type Lexicon = Message -> [World]
 
@@ -52,15 +56,17 @@ eval Null = [N, S, A]
 refineEval1 :: Lexicon
 refineEval1 m
   | m == Some = [S]
-  | otherwise = eval m
+  | otherwise = eval m  -- (null messages aren't refined)
 
 refineEval2 :: Lexicon
 refineEval2 m
   | m == Some = [A]
-  | otherwise = eval m
+  | otherwise = eval m  -- (null messages aren't refined)
 
 lexiconPrior :: Dist m => m Lexicon
 lexiconPrior = uniform [eval, refineEval1, refineEval2]
+                                  -- Like worlds, the primitive thing in Potts
+                                  -- et al. is a prior over *sets* of lexica.
 
 {-
 powersetPlus :: Eq a => [a] -> [[a]]
@@ -73,43 +79,62 @@ refineEval = powersetPlus . eval
 -}
 
 --
--- Mutually recursive pragmatic reasoning
+-- Arbitrarily pragmatic agents given by mutually recursive functions.
+-- The definitions here are somewhat more general than that of Potts et al.
 --
 
-modify :: (Prob -> Prob) -> BDDist a -> BDDist a
-modify f mx = MaybeT (MassT f'd)
-  where f'd = [Mass (f n) x | Mass n x <- runMassT (runMaybeT mx)]
-
-scaleProb :: Message -> BDDist a -> BDDist a
-scaleProb m = modify (exp . subtract (cost m) . log)
-
 listener :: Int -> Message -> Lexicon -> BDDist World
-listener n m sem = lift . bayes $ do
+listener n m sem = bayes $ do
   w <- worldPrior
   if n <= 0   -- literal listener
-    then do
-      guard (w `elem` sem m)
-      return w
+    then guard (w `elem` sem m)
     else do   -- pragmatic listener
       m' <- speaker n w sem
       guard (m' == m)
-      return w
+  return w
 
 speaker :: Int -> World -> Lexicon -> BDDist Message
-speaker n w sem = lift . bayes $ do
+speaker n w sem = bayes $ do
   m  <- messagePrior
   w' <- scaleProb m (listener (n-1) m sem)
   guard (w' == w)
   return m
 
-finalListener :: Message -> BDDist World
-finalListener m = lift . (weightedEq . runMassT) . bayes $ do
-  w   <- worldPrior
-  lex <- lexiconPrior
-  m'  <- speaker 1 w lex
-  guard (m' == m)
+-- Helper functions for scaling probabilities
+scaleProb :: Message -> BDDist a -> BDDist a
+scaleProb m = modify (exp . (temperature *) . subtract (cost m) . log)
+
+modify :: (Prob -> Prob) -> BDDist a -> BDDist a
+modify f mx = MaybeT (MassT f'd)
+  where f'd = [Mass (f n) x | Mass n x <- runMassT (runMaybeT mx)]
+
+temperature = 1
+
+--
+-- Variable-lexica agents
+--
+
+lexicaListener :: Int -> Message -> BDDist World
+lexicaListener n m = weightedEq . runMassT . bayes $ do
+  w <- worldPrior
+  if n <= 1
+    then do
+      lex <- lexiconPrior
+      m'  <- speaker n w lex
+      guard (m' == m)
+    else do
+      m'  <- lexicaSpeaker n w
+      guard (m' == m)
   return w
 
+lexicaSpeaker :: Int -> World -> BDDist Message
+lexicaSpeaker n w = bayes $ do
+  m  <- messagePrior
+  w' <- scaleProb m (lexicaListener (n-1) m)
+  guard (w' == w)
+  return m
+
+-- Helper function for summing probabilities of identical outcomes
 weightedEq :: (Dist m, Ord a) => [Mass Prob a] -> m a
 weightedEq vs = weighted (concatMap col bins)
   where vsOrd = sortBy  (\x y -> compare (getSndMass x) (getSndMass y)) vs
@@ -121,11 +146,14 @@ weightedEq vs = weighted (concatMap col bins)
 -- Testing the model
 --
 
-disp_s1 = sequence_ (map print (test!!1))
-  where test = [[pretty w (speaker n w eval) | w <- [N ..]] | n <- [0..]]
+disp_s n = sequence_ (map print test)
+  where test = [pretty w (speaker n w eval)   | w <- [N ..]]
 
-disp_L = sequence_ (map print test)
-  where test = [pretty m (finalListener m) | m <- [Some ..]]
+disp_l n = sequence_ (map print test)
+  where test = [pretty m (listener n m eval)  | m <- [Some ..]]
 
-pretty o mx = ["P("++ show x ++"|"++ show o ++") = "++ show (getSum n) |
-  Mass n (Just x) <- runMassT (runMaybeT mx)]
+disp_L n = sequence_ (map print test)
+  where test = [pretty m (lexicaListener n m) | m <- [Some ..]]
+
+pretty o mx = "P(.|"++ show o ++"): "++ concat [show x ++" = "++ show (getSum
+  n) ++", " | Mass n (Just x) <- runMassT (runMaybeT mx)]
