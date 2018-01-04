@@ -76,7 +76,7 @@ instance Dist m => Dist (MaybeT m) where
 
 type BDDist = MaybeT DDist
 
-bayes :: BDDist a -> DDist a
+bayes :: Dist m => BDDist a -> m a
 bayes = weighted . catMaybes' . runMassT . runMaybeT
   where catMaybes' = catMaybes . fmap pull
         pull (Mass y mx) = do {x <- mx; return (Mass y x)}
@@ -113,6 +113,9 @@ statusCondPos = do
   guard (test == Pos)
   return (status, test)
 
+test1 :: [Mass Prob (Status, Test)]
 test1 = runMassT (bayes statusCondPos)
+
+test2 :: IO [Double]
 test2 = fmap (\ns -> [fromIntegral n / fromIntegral (sum ns) | n <- ns]) nsIO
   where nsIO = bayesMC 10000 statusCondPos
