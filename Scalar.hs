@@ -33,6 +33,32 @@ data World = N | S | A
 data Message = Some | All | Null
   deriving (Show, Eq, Enum, Ord)
 
+type Lexicon = Message -> [World]
+
+eval :: Lexicon
+eval Some = [S, A]
+eval All  = [A]
+eval Null = [N, S, A]
+
+{-
+powersetPlus :: Eq a => [a] -> [[a]]
+powersetPlus = filter (/= []) . powerset
+  where powerset []     = [[]]
+        powerset (x:xs) = let xss = powerset xs in xss ++ map (x:) xss
+
+refineEval :: Message -> [[World]]
+refineEval = powersetPlus . eval
+-}
+
+--
+-- Model parameters
+--
+
+cost Null = 5   -- Only null messages incur costs
+cost _    = 0   -- Coerced into Sum's by GHC?
+
+temperature = 1 -- Higher values ~> more eager pragmatic reasoning
+
 worldPrior :: Dist m => m World
 worldPrior = uniform [N ..]       -- The primitive notion in Potts et al. is a
                                   -- prior over *sets* of worlds/states (i.e.,
@@ -40,17 +66,8 @@ worldPrior = uniform [N ..]       -- The primitive notion in Potts et al. is a
 
 messagePrior :: Dist m => m Message
 messagePrior = uniform [Some ..]  -- No correspondent in Potts et al. Flat
-                                  -- here so makes no difference.
-
-cost Null = 5   -- Only null messages incur costs
-cost _    = 0   -- Coerced into Sum's by GHC?
-
-type Lexicon = Message -> [World]
-
-eval :: Lexicon
-eval Some = [S, A]
-eval All  = [A]
-eval Null = [N, S, A]
+                                  -- here so makes no difference. May be able
+                                  -- to play a role analogous to msg costs?
 
 refineEval1 :: Lexicon
 refineEval1 m
@@ -67,19 +84,9 @@ lexiconPrior = uniform [eval, refineEval1, refineEval2]
                                   -- Like worlds, the primitive thing in Potts
                                   -- et al. is a prior over *sets* of lexica.
 
-{-
-powersetPlus :: Eq a => [a] -> [[a]]
-powersetPlus = filter (/= []) . powerset
-  where powerset []     = [[]]
-        powerset (x:xs) = let xss = powerset xs in xss ++ map (x:) xss
-
-refineEval :: Message -> [[World]]
-refineEval = powersetPlus . eval
--}
-
 --
 -- Arbitrarily pragmatic agents given by mutually recursive functions.
--- The definitions here are somewhat more general than that of Potts et al.
+-- The definitions here are somewhat more general than those of Potts et al.
 --
 
 listener :: Int -> Message -> Lexicon -> BDDist World
@@ -107,24 +114,28 @@ modify :: (Prob -> Prob) -> BDDist a -> BDDist a
 modify f mx = MaybeT (MassT f'd)
   where f'd = [Mass (f n) x | Mass n x <- runMassT (runMaybeT mx)]
 
-temperature = 1
-
 --
 -- Variable-lexica agents
 --
 
 lexicaListener :: Int -> Message -> BDDist World
 lexicaListener n m = weightedEq . runMassT . bayes $ do
-  w <- worldPrior
-  if n <= 1
-    then do
-      lex <- lexiconPrior
-      m'  <- speaker n w lex
-      guard (m' == m)
-    else do
-      m'  <- lexicaSpeaker n w
-      guard (m' == m)
+  w  <- worldPrior
+  m' <- if n <= 1
+          then do
+            lex <- lexiconPrior
+            speaker n w lex
+          else lexicaSpeaker n w
+  guard (m' == m)
   return w
+
+-- Sum weights of identical outcomes
+weightedEq :: (Dist m, Ord a) => [Mass Prob a] -> m a
+weightedEq vs = weighted (concatMap col bins)
+  where vsOrd = sortBy  (\x y -> compare (getSndMass x) (getSndMass y)) vs
+        bins  = groupBy (\x y -> (==)    (getSndMass x) (getSndMass y)) vsOrd
+        col []                = []
+        col ms@((Mass _ x):_) = [Mass (sum (map getFstMass ms)) x]
 
 lexicaSpeaker :: Int -> World -> BDDist Message
 lexicaSpeaker n w = bayes $ do
@@ -132,14 +143,6 @@ lexicaSpeaker n w = bayes $ do
   w' <- scaleProb m (lexicaListener (n-1) m)
   guard (w' == w)
   return m
-
--- Helper function for summing probabilities of identical outcomes
-weightedEq :: (Dist m, Ord a) => [Mass Prob a] -> m a
-weightedEq vs = weighted (concatMap col bins)
-  where vsOrd = sortBy  (\x y -> compare (getSndMass x) (getSndMass y)) vs
-        bins  = groupBy (\x y -> (==)    (getSndMass x) (getSndMass y)) vsOrd
-        col []                = []
-        col ms@((Mass _ x):_) = [Mass (sum (map getFstMass ms)) x]
 
 --
 -- Testing the model
