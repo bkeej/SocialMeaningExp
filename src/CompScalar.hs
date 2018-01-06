@@ -50,9 +50,9 @@ instance Eq World where
     in uaj == vaj && uam == vam && usj == vsj && usm == vsm
 
 instance Show World where
-  show w | w == w1 = "w1"
-         | w == w2 = "w2"
-         | w == w3 = "w3"
+  show w | w == wA = "wA"
+         | w == wS = "wS"
+         | w == wN = "wN"
 
 (@@) :: Value -> Value -> Value
 (VF f) @@ x = f x
@@ -69,22 +69,22 @@ neg :: Value -> Value
 neg (VT t) = VT (not t)
 neg (VF f) = VF (\x -> neg (f x))
 
-w1, w2, w3 :: World
-w1 = World
+wA, wS, wN :: World
+wA = World
   { aced' = VF (\(VE x) -> VT (x == "John"))
   , scored' = VF (\(VE x) -> VT (x == "John"))
   }
-w2 = World
+wS = World
   { aced' = VF (\(VE x) -> VT False)
   , scored' = VF (\(VE x) -> VT (x == "John"))
   }
-w3 = World
+wN = World
   { aced' = VF (\(VE x) -> VT False)
   , scored' = VF (\(VE x) -> VT False)
   }
 
 universe :: [World]
-universe = [w1, w2, w3]
+universe = [wA, wS, wN]
 
 --
 -- Language stuff
