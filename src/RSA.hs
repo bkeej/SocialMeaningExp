@@ -6,6 +6,8 @@
  - [^1]: https://nlp.stanford.edu/pubs/monroe2015learning.pdf
 -}
 
+module RSA where
+
 import           Control.Monad
 import           Control.Monad.Trans.Class
 import           Control.Monad.Trans.Maybe

@@ -17,6 +17,8 @@
  - [^1]: https://doi.org/10.1093/jos/ffv012
 -}
 
+module Scalar where
+
 import           Control.Monad             (guard)
 import           Control.Monad.Trans.Maybe (MaybeT (MaybeT, runMaybeT))
 import           Data.List                 (groupBy, sortBy)
