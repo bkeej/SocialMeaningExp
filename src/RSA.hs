@@ -1,16 +1,15 @@
 {-
- - Implements a simple IBR/RSA-type model using BDDist (Prob.hs), sans costs
- - and temperatures. See Monroe & Potts 2015[^1] (Figure 1) for the model
- - assumed here. Running `test!!1` reproduces the table in their Figure (1d).
+ - Implements a simple RSA-type model using BDDist (Prob.hs), sans costs and
+ - temperatures. See Monroe & Potts 2015[^1] (Figure 1) for the model assumed
+ - here. Running `disp_s 1` reproduces the table in their Figure (1d).
  -
  - [^1]: https://nlp.stanford.edu/pubs/monroe2015learning.pdf
 -}
 
 module RSA where
 
-import           Control.Monad
-import           Control.Monad.Trans.Class
-import           Control.Monad.Trans.Maybe
+import           Control.Monad             (guard)
+import           Control.Monad.Trans.Maybe (MaybeT (MaybeT, runMaybeT))
 import           Prob
 import           Utils
 
@@ -24,52 +23,65 @@ data World = R1 | R2 | R3
 data Message = Beard | Glasses | Tie
   deriving (Show, Eq, Enum)
 
+type Lexicon = Message -> [World]
+
+eval :: Lexicon
+eval Beard   = [R1]
+eval Glasses = [R1, R2]
+eval Tie     = [R2, R3]
+
+--
+-- Model parameters
+--
+
+cost _ = 0      -- Across-the-board no-cost messages
+
+temperature = 1 -- Higher values ~> more eager pragmatic reasoning
+
 worldPrior :: Dist m => m World
 worldPrior = uniform [R1 ..]
 
 messagePrior :: Dist m => m Message
 messagePrior = uniform [Beard ..]
 
-eval :: (Message, World) -> Bool
-eval (Beard,   R1) = True
-eval (Beard,   _ ) = False
-eval (Glasses, R3) = False
-eval (Glasses, _ ) = True
-eval (Tie,     R1) = False
-eval (Tie,     _ ) = True
-
 --
 -- Mutually recursive pragmatic reasoning
 --
 
-speaker :: Int -> World -> BDDist Message
-speaker n w = lift . bayes $ do
+speaker :: Int -> World -> Lexicon -> BDDist Message
+speaker n w sem = bayes $ do
   m <- messagePrior
-  if n <= 0   -- literal speaker
-    then do
-      guard $ eval (m, w)
-      return m
-    else do   -- arbitarily pragmatic speaker
-      w' <- listener n m
-      guard $ w' == w
-      return m
+  scaleProb m $ if n <= 0   -- literal speaker
+                  then guard (w `elem` sem m)
+                  else do   -- pragmatic speaker
+                    w' <- listener n m sem
+                    guard (w' == w)
+  return m
 
-listener :: Int -> Message -> BDDist World
-listener n m = lift . bayes $ do
+listener :: Int -> Message -> Lexicon -> BDDist World
+listener n m sem = bayes $ do
   w  <- worldPrior
-  m' <- speaker (n-1) w
-  guard $ m' == m
+  m' <- speaker (n-1) w sem
+  guard (m' == m)
   return w
+
+-- Helper functions for scaling probabilities
+scaleProb :: Message -> BDDist a -> BDDist a
+scaleProb m = modify (exp . (temperature *) . subtract (cost m) . log)
+
+modify :: (Prob -> Prob) -> BDDist a -> BDDist a
+modify f mx = MaybeT (MassT f'd)
+  where f'd = [Mass (f n) x | Mass n x <- runMassT (runMaybeT mx)]
 
 --
 -- Testing the model
 --
 
-test = [[runMassT (runMaybeT (speaker n w)) | w <- [R1 ..]] | n <- [0..]]
+disp_s n = sequence_ (map print test)
+  where test = [pretty w (speaker n w eval)   | w <- [R1 ..]]
 
-{-
- - test!!0 = literal speaker
- - test!!1 = pragmatic speaker
- - test!!n = n-pragmatic speaker
- - gets intractable around test!!5 (!)
--}
+disp_l n = sequence_ (map print test)
+  where test = [pretty m (listener n m eval)  | m <- [Beard ..]]
+
+pretty o mx = "P(.|"++ show o ++"): "++ concat [show x ++" = "++ show (getSum
+  n) ++", " | Mass n (Just x) <- runMassT (runMaybeT mx)]
