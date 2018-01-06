@@ -6,18 +6,19 @@ Super preliminary for now --- these are more learning tools for me than
 scientific tools for you. Seems like the only way I can learn new formal things
 these days is by making myself code up an implementation. 🤫
 
-`Util.hs` has the basic monad transformer for probabilistic computing (coarser
+`Utils.hs` has the basic monad transformer for probabilistic computing (coarser
 semirings are acceptable too). `Prob.hs` uses this transformer to define
 various probabilistic monads, with support for Bayesian calculations and
 sampling functions. All of this is based pretty directly on Kidd's work.
 
-`RSA.hs` implements a simple Rational Speech Acts model using these tools.
-`Scalar.hs` extends this to scalar implicature with lexical uncertainty (and
-message costs).
+`RSA.hs` implements a simple speaker-oriented Rational Speech Acts model using
+these tools. `Scalar.hs` extends this to hearer-oriented scalar implicature
+with lexical uncertainty. Look at how straightforward the agents are to define
+using the monadic probability interface. It's nice.
 
 Some things I'm thinking about:
 
--   Embedded implicature, à la [Potts et al (2015)][5].
+-   Embedded implicature, à la [Potts et al (2015)][5]; compositional issues.
 
 -   Helping yourself to lexical scales vs. not (cf. Potts et al again, as well
     as [Russell 2012][6]).
