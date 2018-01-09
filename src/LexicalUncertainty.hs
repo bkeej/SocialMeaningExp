@@ -19,26 +19,26 @@
 
 module LexicalUncertainty where
 
-import Control.Monad             (guard)
-import Control.Monad.Trans.Maybe (MaybeT (MaybeT, runMaybeT))
-import Data.Maybe                (fromJust)
-import Data.List                 (partition)
-import Data.Function             (on)
-import Prob
-import Utils
-import ModelTheory
-import LF
-import Lexica
+import           Control.Monad             (guard)
+import           Control.Monad.Trans.Maybe (MaybeT (MaybeT, runMaybeT))
+import           Data.Function             (on)
+import           Data.List                 (partition)
+import           Data.Maybe                (fromJust)
+import           Lexica
+import           LF
+import           ModelTheory
+import           Prob
+import           Utils
 
 type Env = [(Int, Value)]
 
 eval :: Lexicon vocab -> Env -> (LF vocab) -> Value
 eval sem env term = case term of
-  Null -> VF (\w -> VT True)
-  Name e -> VE (case e of {"John" -> John ; "Mary" -> Mary})
-  Lex l -> sem l
-  Var n -> fromJust $ lookup n env
-  Lam n mb -> VF (\x -> eval sem ((n,x):env) mb)
+  Null      -> VF (\w -> VT True)
+  Name e    -> VE (case e of {"John" -> John ; "Mary" -> Mary})
+  Lex l     -> sem l
+  Var n     -> fromJust $ lookup n env
+  Lam n mb  -> VF (\x -> eval sem ((n,x):env) mb)
   App mf mx -> (eval sem env mf) @@ (eval sem env mx)
 
 --
@@ -47,45 +47,46 @@ eval sem env term = case term of
 --
 
 type Cost l = LF l -> Sum Float
-type Agent l a = Lexicon l -> Cost l -> BDDist World -> BDDist (LF l) -> BDDist a
+type Temp = Sum Float
+type Params l = (Temp, Cost l)
+
+type Agent l a = Lexicon l -> Params l -> BDDist World -> BDDist (LF l) -> BDDist a
 
 listener :: (Eq l) => Int -> LF l -> Agent l World
-listener n m sem cost wrldPrior msgPrior = bayes $ do
+listener n m sem params wrldPrior msgPrior = bayes $ do
   w <- wrldPrior
   if n <= 0   -- literal listener
     then case (eval sem [] m) @@ (VS w) of VT t -> guard t
     else do   -- pragmatic listener
-      m' <- speaker n w sem cost wrldPrior msgPrior
+      m' <- speaker n w sem params wrldPrior msgPrior
       guard (m' == m)
   return w
 
 speaker :: Eq l => Int -> World -> Agent l (LF l)
-speaker n w sem cost wrldPrior msgPrior = bayes $ do
+speaker n w sem params wrldPrior msgPrior = bayes $ do
   m  <- msgPrior
-  w' <- scaleProb m cost (listener (n-1) m sem cost wrldPrior msgPrior)
+  w' <- scaleProb m params (listener (n-1) m sem params wrldPrior msgPrior)
   guard (w' == w)
   return m
 
 -- Helper functions for scaling probabilities
-scaleProb :: LF l -> Cost l -> BDDist a -> BDDist a
-scaleProb m cost = modify (exp . (temperature *) . subtract (cost m) . log)
+scaleProb :: LF l -> Params l -> BDDist a -> BDDist a
+scaleProb m (t, c) = modify (exp . (t *) . subtract (c m) . log)
 
 modify :: (Prob -> Prob) -> BDDist a -> BDDist a
 modify f mx = MaybeT (MassT f'd)
   where f'd = [Mass (f n) x | Mass n x <- runMassT (runMaybeT mx)]
 
-temperature = 1
-
 --
 -- Variable-lexica agents
 --
 
-type VLAgent l a = Cost l -> BDDist World -> BDDist (LF l) -> BDDist (Lexicon l) -> BDDist a
+type VLAgent l a = Params l -> BDDist World -> BDDist (LF l) -> BDDist (Lexicon l) -> BDDist a
 
 lexicaSpeaker :: Eq l => Int -> World -> VLAgent l (LF l)
-lexicaSpeaker n w cost wldPrior msgPrior lexPrior = bayes $ do
+lexicaSpeaker n w params wldPrior msgPrior lexPrior = bayes $ do
  m  <- msgPrior
- w' <- scaleProb m cost (lexicaListener (n-1) m cost wldPrior msgPrior lexPrior)
+ w' <- scaleProb m params (lexicaListener (n-1) m params wldPrior msgPrior lexPrior)
  guard (w' == w)
  return m
 
