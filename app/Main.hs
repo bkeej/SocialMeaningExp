@@ -25,30 +25,30 @@ data ParamModel m l = PM
 
 asModel :: Dist m => ParamModel m ASVocab
 asModel = PM
-  { worldPrior = uniform universe
+  { worldPrior = uniform asUniverse
   , messagePrior = uniform asMessages
   , lexiconPrior = uniform asLexica
   }
 
-cost :: LF ASVocab -> Sum Float
-cost Null = 5   -- Only null messages incur costs
-cost _    = 0
+asCost :: Cost ASVocab
+asCost Null = 5   -- Only null messages incur asCosts
+asCost _    = 0
 
 pretty o mx = "P(.|"++ show o ++"): "++ concat [show x ++" = "++ show (getSum
   n) ++", " | Mass n (Just x) <- runMassT (runMaybeT mx)]
 
 disp_s n = sequence_ (map print test)
-  where test = [pretty w (speaker n w asLex1 cost wp mp)   | w <- universe]
+  where test = [pretty w (speaker n w asLex1 asCost wp mp)   | w <- asUniverse]
         wp = worldPrior asModel
         mp = messagePrior asModel
 
 disp_l n = sequence_ (map print test)
-  where test = [pretty m (listener n m asLex1 cost wp mp)  | m <- asMessages]
+  where test = [pretty m (listener n m asLex1 asCost wp mp)  | m <- asMessages]
         wp = worldPrior asModel
         mp = messagePrior asModel
 
 disp_L n = sequence_ (map print test)
-  where test = [pretty m (lexicaListener n m cost wp mp lp) | m <- asMessages]
+  where test = [pretty m (lexicaListener n m asCost wp mp lp) | m <- asMessages]
         wp = worldPrior asModel
         mp = messagePrior asModel
         lp = lexiconPrior asModel

@@ -41,7 +41,9 @@ eval sem env term = case term of
 -- The definitions here are somewhat more general than that of Potts et al.
 --
 
-listener :: (Eq l) => Int -> LF l -> Lexicon l -> (LF l -> Sum Float) -> BDDist World -> BDDist (LF l) -> BDDist World
+type Cost l = LF l -> Sum Float
+
+listener :: (Eq l) => Int -> LF l -> Lexicon l -> Cost l -> BDDist World -> BDDist (LF l) -> BDDist World
 listener n m sem cost wrldPrior msgPrior = bayes $ do
   w <- wrldPrior
   if n <= 0   -- literal listener
@@ -51,7 +53,7 @@ listener n m sem cost wrldPrior msgPrior = bayes $ do
       guard (m' == m)
   return w
 
-speaker :: Eq l => Int -> World -> Lexicon l -> (LF l -> Sum Float) -> BDDist World -> BDDist (LF l) -> BDDist (LF l)
+speaker :: Eq l => Int -> World -> Lexicon l -> Cost l -> BDDist World -> BDDist (LF l) -> BDDist (LF l)
 speaker n w sem cost wrldPrior msgPrior = bayes $ do
   m  <- msgPrior
   w' <- scaleProb m cost (listener (n-1) m sem cost wrldPrior msgPrior)
@@ -59,7 +61,7 @@ speaker n w sem cost wrldPrior msgPrior = bayes $ do
   return m
 
 -- Helper functions for scaling probabilities
-scaleProb :: LF l -> (LF l -> Sum Float) -> BDDist a -> BDDist a
+scaleProb :: LF l -> Cost l -> BDDist a -> BDDist a
 scaleProb m cost = modify (exp . (temperature *) . subtract (cost m) . log)
 
 modify :: (Prob -> Prob) -> BDDist a -> BDDist a
@@ -74,7 +76,7 @@ temperature = 1
 --
 
 
-lexicaListener :: Eq l => Int -> LF l -> (LF l -> Sum Float) -> BDDist World -> BDDist (LF l) -> BDDist (Lexicon l) -> BDDist World
+lexicaListener :: Eq l => Int -> LF l -> Cost l -> BDDist World -> BDDist (LF l) -> BDDist (Lexicon l) -> BDDist World
 lexicaListener n m cost wrldPrior msgPrior intPrior = weightedEq . runMassT . bayes $ do
  w <- wrldPrior
  if n <= 1
@@ -87,7 +89,7 @@ lexicaListener n m cost wrldPrior msgPrior intPrior = weightedEq . runMassT . ba
      guard (m' == m)
  return w
 
-lexicaSpeaker :: Eq l => Int -> World -> (LF l -> Sum Float) -> BDDist World -> BDDist (LF l) -> BDDist (Lexicon l) -> BDDist (LF l)
+lexicaSpeaker :: Eq l => Int -> World -> Cost l -> BDDist World -> BDDist (LF l) -> BDDist (Lexicon l) -> BDDist (LF l)
 lexicaSpeaker n w cost wrldPrior msgPrior intPrior = bayes $ do
  m  <- msgPrior
  w' <- scaleProb m cost (lexicaListener (n-1) m cost wrldPrior msgPrior intPrior)
