@@ -189,7 +189,9 @@ interpPrior = uniform testIs          -- The primitive notion in Potts et al.
 -- The definitions here are somewhat more general than those of Potts et al.
 --
 
-listener :: (Eq l) => Int -> Mess l -> Interp l -> BDDist (Mess l) -> BDDist World
+type Agent l a = Interp l -> BDDist (Mess l) -> BDDist a
+
+listener :: (Eq l) => Int -> Mess l -> Agent l World
 listener n m sem msgPrior = bayes $ do
   w <- worldPrior
   if n <= 0   -- literal listener
@@ -199,7 +201,7 @@ listener n m sem msgPrior = bayes $ do
       guard (m' == m)
   return w
 
-speaker :: Eq l => Int -> World -> Interp l -> BDDist (Mess l) -> BDDist (Mess l)
+speaker :: Eq l => Int -> World -> Agent l (Mess l)
 speaker n w sem msgPrior = bayes $ do
   m  <- msgPrior
   w' <- scaleProb m (listener (n-1) m sem msgPrior)
@@ -218,23 +220,23 @@ modify f mx = MaybeT (MassT f'd)
 -- Variable-lexica agents
 --
 
-type Agent l a = BDDist (Mess l) -> BDDist (Interp l) -> BDDist a
+type VLAgent l a = BDDist (Interp l) -> BDDist (Mess l) ->  BDDist a
 
-lexicaSpeaker :: Eq l => Int -> World -> Agent l (Mess l)
-lexicaSpeaker n w msgPrior intPrior = bayes $ do
+lexicaSpeaker :: Eq l => Int -> World -> VLAgent l (Mess l)
+lexicaSpeaker n w intPrior msgPrior = bayes $ do
   m  <- msgPrior
-  w' <- scaleProb m (lexicaListener (n-1) m msgPrior intPrior)
+  w' <- scaleProb m (lexicaListener (n-1) m intPrior msgPrior)
   guard (w' == w)
   return m
 
-lexicaListener :: Eq l => Int -> Mess l -> Agent l World
-lexicaListener n m msgPrior intPrior = weightedEq . runMassT . bayes $ do
+lexicaListener :: Eq l => Int -> Mess l -> VLAgent l World
+lexicaListener n m intPrior msgPrior = weightedEq . runMassT . bayes $ do
   w  <- worldPrior
   m' <- if n <= 1
           then do
             sem <- intPrior
             speaker n w sem msgPrior
-          else lexicaSpeaker n w msgPrior intPrior
+          else lexicaSpeaker n w intPrior msgPrior
   guard (m' == m)
   return w
 
@@ -267,4 +269,4 @@ disp_l n = sequence_ (map putStrLn test) where
   test = [pretty m (listener n m testI1 messagePrior) | m <- testMessages]
 
 disp_L n = sequence_ (map putStrLn test) where
-  test = [pretty m (lexicaListener n m messagePrior interpPrior) | m <- testMessages]
+  test = [pretty m (lexicaListener n m interpPrior messagePrior) | m <- testMessages]
