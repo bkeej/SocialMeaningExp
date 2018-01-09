@@ -4,7 +4,7 @@
 
 name:           prob-tools
 version:        0.1.0.0
-description:    Please see the README on Github at <https://github.com/dylnb/prob-tools#readme>
+description:    Please see the README on Github at <https://github.com/schar/prob-tools#readme>
 build-type:     Simple
 cabal-version:  >= 1.10
 
@@ -20,8 +20,8 @@ library
     , semiring-simple
     , random
   exposed-modules:
+      CompScalar
       Lexica
-      LexicalUncertainty
       LF
       ModelTheory
       Prob
