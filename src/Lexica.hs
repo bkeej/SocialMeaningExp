@@ -3,29 +3,36 @@ module Lexica where
 import ModelTheory
 import LF
 
+-- 'aced', 'scored' messages
 data ASVocab
-  = Some
-  | All
-  | Aced
+  = Aced
   | Scored
   deriving (Eq, Show)
 
 type Lexicon vocab = vocab -> Value
 
-testI1 :: Lexicon ASVocab
-testI1 s = case s of
+asLex1 :: Lexicon ASVocab
+asLex1 s = case s of
   Aced -> VF (\x -> VF (\(VS w) -> aced' w @@ x))
   Scored -> VF (\x -> VF (\(VS w) -> scored' w @@ x))
 
-testI2 :: Lexicon ASVocab
-testI2 s = case s of
+asLex2 :: Lexicon ASVocab
+asLex2 s = case s of
   Aced -> VF $ \x -> VF $ \(VS w) -> aced' w @@ x
   Scored -> VF $ \x -> VF $ \(VS w) -> (scored' w `cap` (neg $ aced' w)) @@ x
 
-testI3 :: Lexicon ASVocab
-testI3 s = case s of
+asLex3 :: Lexicon ASVocab
+asLex3 s = case s of
   Aced -> VF (\x -> VF (\(VS w) -> aced' w @@ x))
   Scored -> VF (\x -> VF (\(VS w) -> aced' w @@ x))
 
-testIs ::[Lexicon ASVocab]
-testIs = [testI1, testI2, testI3]
+asLexica ::[Lexicon ASVocab]
+asLexica = [asLex1, asLex2, asLex3]
+
+asMessages :: [LF ASVocab]
+asMessages =
+  [ Lex Aced `app` Name "John"
+  , Lex Scored `app` Name "John"
+  , Null
+  ]
+
