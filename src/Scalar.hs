@@ -10,9 +10,9 @@
  - Figure 2 (page 773), and running `disp_L 1` reproduces table L at the top
  - of their Figure 2 (modulo rounding).
  -
- - To do: Think about more principled and/or general approaches to `modify`,
- - `weightedEq`; look at local implicature generation; think about how to
- - automatically generate refined lexica; play with exceptional implicature.
+ - To do: Think about more principled and/or general approaches to `modify`;
+ - look at local implicature generation; think about how to automatically
+ - generate refined lexica; play with exceptional implicature.
  -
  - [^1]: https://doi.org/10.1093/jos/ffv012
 -}
@@ -21,7 +21,8 @@ module Scalar where
 
 import           Control.Monad             (guard)
 import           Control.Monad.Trans.Maybe (MaybeT (MaybeT, runMaybeT))
-import           Data.List                 (groupBy, sortBy)
+import           Data.Function             (on)
+import           Data.List                 (groupBy, partition, sortBy)
 import           Prob
 import           Utils
 
@@ -41,16 +42,6 @@ eval :: Lexicon
 eval Some = [S, A]
 eval All  = [A]
 eval Null = [N, S, A]
-
-{-
-powersetPlus :: Eq a => [a] -> [[a]]
-powersetPlus = filter (/= []) . powerset
-  where powerset []     = [[]]
-        powerset (x:xs) = let xss = powerset xs in xss ++ map (x:) xss
-
-refineEval :: Message -> [[World]]
-refineEval = powersetPlus . eval
--}
 
 --
 -- Model parameters
@@ -120,6 +111,13 @@ modify f mx = MaybeT (MassT f'd)
 -- Variable-lexica agents
 --
 
+lexicaSpeaker :: Int -> World -> BDDist Message
+lexicaSpeaker n w = bayes $ do
+  m  <- messagePrior
+  w' <- scaleProb m (lexicaListener (n-1) m)
+  guard (w' == w)
+  return m
+
 lexicaListener :: Int -> Message -> BDDist World
 lexicaListener n m = weightedEq . runMassT . bayes $ do
   w  <- worldPrior
@@ -132,32 +130,32 @@ lexicaListener n m = weightedEq . runMassT . bayes $ do
   return w
 
 -- Sum weights of identical outcomes
-weightedEq :: (Dist m, Ord a) => [Mass Prob a] -> m a
+weightedEq :: (Dist m, Eq a) => [Mass Prob a] -> m a
 weightedEq vs = weighted (concatMap col bins)
-  where vsOrd = sortBy  (\x y -> compare (getSndMass x) (getSndMass y)) vs
-        bins  = groupBy (\x y -> (==)    (getSndMass x) (getSndMass y)) vsOrd
+  where bins = groupEqBy ((==) `on` getSndMass) vs
         col []                = []
         col ms@((Mass _ x):_) = [Mass (sum (map getFstMass ms)) x]
 
-lexicaSpeaker :: Int -> World -> BDDist Message
-lexicaSpeaker n w = bayes $ do
-  m  <- messagePrior
-  w' <- scaleProb m (lexicaListener (n-1) m)
-  guard (w' == w)
-  return m
+groupEqBy :: (a -> a -> Bool) -> [a] -> [[a]]
+groupEqBy _ [] = []
+groupEqBy f (a:rest) = (a:as) : groupEqBy f bs
+  where (as,bs) = partition (f a) rest
 
 --
 -- Testing the model
 --
 
-disp_s n = sequence_ (map print test)
+pretty o mx = dropR 2 probs where
+  probs = "P(.|" ++ show o ++"): " ++ concatMap f (runMassT (runMaybeT mx))
+  f = \(Mass n (Just x)) -> show x ++ " = " ++ prettyN n ++ ", "
+  prettyN (Sum n) = show (fromInteger (round (n * 100)) / 10.0^^2)
+  dropR n xs = fst (splitAt (length xs - n) xs)
+
+disp_s n = sequence_ (map putStrLn test)
   where test = [pretty w (speaker n w eval)   | w <- [N ..]]
 
-disp_l n = sequence_ (map print test)
+disp_l n = sequence_ (map putStrLn test)
   where test = [pretty m (listener n m eval)  | m <- [Some ..]]
 
-disp_L n = sequence_ (map print test)
+disp_L n = sequence_ (map putStrLn test)
   where test = [pretty m (lexicaListener n m) | m <- [Some ..]]
-
-pretty o mx = "P(.|"++ show o ++"): "++ concat [show x ++" = "++ show (getSum
-  n) ++", " | Mass n (Just x) <- runMassT (runMaybeT mx)]
