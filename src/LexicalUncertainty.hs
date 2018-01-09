@@ -17,7 +17,7 @@
  - [^1]: https://doi.org/10.1093/jos/ffv012
 -}
 
-module CompScalar where
+module LexicalUncertainty where
 
 import Control.Monad             (guard)
 import Control.Monad.Trans.Maybe (MaybeT (MaybeT, runMaybeT))

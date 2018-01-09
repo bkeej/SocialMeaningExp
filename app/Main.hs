@@ -4,7 +4,7 @@ import Data.Maybe (fromJust)
 import Lexica
 import ModelTheory
 import LF
-import CompScalar
+import LexicalUncertainty
 import Prob
 import Utils
 import Control.Monad.Trans.Maybe (MaybeT (MaybeT, runMaybeT))
