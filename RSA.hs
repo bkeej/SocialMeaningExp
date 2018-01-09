@@ -6,8 +6,6 @@
  - [^1]: https://nlp.stanford.edu/pubs/monroe2015learning.pdf
 -}
 
-module RSA where
-
 import           Control.Monad             (guard)
 import           Control.Monad.Trans.Maybe (MaybeT (MaybeT, runMaybeT))
 import           Prob
