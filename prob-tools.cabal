@@ -20,8 +20,11 @@ library
     , semiring-simple
     , random
   exposed-modules:
-      CompScalar
+      Lexica
+      LexicalUncertainty
+      LF
       Lib
+      ModelTheory
       Prob
       RSA
       Scalar
