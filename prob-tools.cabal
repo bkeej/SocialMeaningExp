@@ -1,0 +1,44 @@
+-- This file has been generated from package.yaml by hpack version 0.17.1.
+--
+-- see: https://github.com/sol/hpack
+
+name:           prob-tools
+version:        0.1.0.0
+description:    Please see the README on Github at <https://github.com/dylnb/prob-tools#readme>
+build-type:     Simple
+cabal-version:  >= 1.10
+
+extra-source-files:
+    README.md
+
+library
+  hs-source-dirs:
+      src
+  build-depends:
+      base >= 4.7 && < 5
+    , transformers
+    , semiring-simple
+    , random
+  exposed-modules:
+      Lexica
+      LexicalUncertainty
+      LF
+      ModelTheory
+      Prob
+      RSA
+      Scalar
+      Utils
+  default-language: Haskell2010
+
+executable prob-tools-exe
+  main-is: Main.hs
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >= 4.7 && < 5
+    , transformers
+    , semiring-simple
+    , random
+    , prob-tools
+  default-language: Haskell2010
