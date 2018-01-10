@@ -42,36 +42,44 @@ eval sem env term = case term of
   App mf mx -> (eval sem env mf) @@ (eval sem env mx)
 
 --
+-- A model includes a base lexicon, priors over worlds/messages/lexica, and
+-- specifications of cost and temperature parameters.
+--
+
+data ParamModel m l = PM
+  { lexicon      :: Lexicon l
+  , worldPrior   :: m World
+  , messagePrior :: m (LF l)
+  , lexiconPrior :: m (Lexicon l)
+  , cost         :: LF l -> Sum Float
+  , temp         :: Sum Float
+  }
+
+--
 -- Arbitrarily pragmatic agents given by mutually recursive functions.
 -- The definitions here are somewhat more general than those of Potts et al.
 --
 
-type Cost l = LF l -> Sum Float
-type Temp = Sum Float
-type Params l = (Temp, Cost l)
-
-type Agent l a = Lexicon l -> Params l -> BDDist World -> BDDist (LF l) -> BDDist a
-
-listener :: (Eq l) => Int -> LF l -> Agent l World
-listener n m sem params wrldPrior msgPrior = bayes $ do
-  w <- wrldPrior
-  if n <= 0   -- literal listener
-    then case (eval sem [] m) @@ (VS w) of VT t -> guard t
-    else do   -- pragmatic listener
-      m' <- speaker n w sem params wrldPrior msgPrior
-      guard (m' == m)
-  return w
-
-speaker :: Eq l => Int -> World -> Agent l (LF l)
-speaker n w sem params wrldPrior msgPrior = bayes $ do
-  m  <- msgPrior
-  w' <- scaleProb m params (listener (n-1) m sem params wrldPrior msgPrior)
+speaker :: Eq l => Int -> World -> ParamModel BDDist l -> BDDist (LF l)
+speaker n w model = bayes $ do
+  m  <- messagePrior model
+  w' <- scale m model (listener (n-1) m model)
   guard (w' == w)
   return m
 
+listener :: (Eq l) => Int -> LF l -> ParamModel BDDist l -> BDDist World
+listener n m model = bayes $ do
+  w <- worldPrior model
+  if n <= 0   -- literal listener
+    then case (eval (lexicon model) [] m) @@ (VS w) of VT t -> guard t
+    else do   -- pragmatic listener
+      m' <- speaker n w model
+      guard (m' == m)
+  return w
+
 -- Helper functions for scaling probabilities
-scaleProb :: LF l -> Params l -> BDDist a -> BDDist a
-scaleProb m (t, c) = modify (exp . (t *) . subtract (c m) . log)
+scale :: LF l -> ParamModel m l -> BDDist a -> BDDist a
+scale m model = modify (exp . (temp model *) . subtract (cost model m) . log)
 
 modify :: (Prob -> Prob) -> BDDist a -> BDDist a
 modify f mx = MaybeT (MassT f'd)
@@ -81,23 +89,21 @@ modify f mx = MaybeT (MassT f'd)
 -- Variable-lexica agents
 --
 
-type VLAgent l a = Params l -> BDDist World -> BDDist (LF l) -> BDDist (Lexicon l) -> BDDist a
+lexicaSpeaker :: Eq l => Int -> World -> ParamModel BDDist l -> BDDist (LF l)
+lexicaSpeaker n w model = bayes $ do
+  m  <- messagePrior model
+  w' <- scale m model (lexicaListener (n-1) m model)
+  guard (w' == w)
+  return m
 
-lexicaSpeaker :: Eq l => Int -> World -> VLAgent l (LF l)
-lexicaSpeaker n w params wldPrior msgPrior lexPrior = bayes $ do
- m  <- msgPrior
- w' <- scaleProb m params (lexicaListener (n-1) m params wldPrior msgPrior lexPrior)
- guard (w' == w)
- return m
-
-lexicaListener :: Eq l => Int -> LF l -> VLAgent l World
-lexicaListener n m cost wldPrior msgPrior lexPrior = weightedEq . runMassT . bayes $ do
-  w  <- wldPrior
+lexicaListener :: (Eq l) => Int -> LF l -> ParamModel BDDist l -> BDDist World
+lexicaListener n m model = weightedEq . runMassT . bayes $ do
+  w  <- worldPrior model
   m' <- if n <= 1
           then do
-            sem <- lexPrior
-            speaker n w sem cost wldPrior msgPrior
-          else lexicaSpeaker n w cost wldPrior msgPrior lexPrior
+            sem <- lexiconPrior model
+            speaker n w (model {lexicon = sem})
+          else lexicaSpeaker n w model
   guard (m' == m)
   return w
 

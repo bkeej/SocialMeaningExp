@@ -1,7 +1,6 @@
 module Main where
 
 import           Control.Monad.Trans.Maybe (MaybeT (MaybeT, runMaybeT))
-import           Data.Maybe                (fromJust)
 import           Lexica
 import           LexicalUncertainty
 import           LF
@@ -11,39 +10,26 @@ import           Utils
 
 main :: IO ()
 main = disp_s 1 >> putStrLn "" >> disp_L 1
--- main = return ()
 
 --
 -- Parameters
 --
 
-data ParamModel m l = PM
-  { worldPrior   :: m World
-  , messagePrior :: m (LF l)
-  , lexiconPrior :: m (Lexicon l)
-  }
-
 asModel :: Dist m => ParamModel m ASVocab
 asModel = PM
-  { worldPrior = uniform asUniverse
+  { lexicon      = asLex1
+  , worldPrior   = uniform asUniverse
   , messagePrior = uniform asMessages
   , lexiconPrior = uniform asLexica
+  , cost         = \x -> if x == Null then 5 else 0
+  , temp         = 1
   }
-
-asCost :: Cost ASVocab
-asCost Null = 5   -- Only null messages incur asCosts
-asCost _    = 0
-
-asTemperature :: Temp
-asTemperature = 1
-
-asParams :: Params ASVocab
-asParams = (asTemperature, asCost)
 
 --
 -- Testing the model
 --
 
+pretty :: (Show a, Show b) => a -> BDDist b -> String
 pretty o mx = dropR 2 probs where
   probs = "P(.|" ++ show o ++"): " ++ concatMap f (runMassT (runMaybeT mx))
   f = \(Mass n (Just x)) -> show x ++ " = " ++ prettyN n ++ ", "
@@ -51,18 +37,10 @@ pretty o mx = dropR 2 probs where
   dropR n xs = fst (splitAt (length xs - n) xs)
 
 disp_s n = sequence_ (map putStrLn test)
-  where test = [pretty w (speaker n w asLex1 asParams wp mp)   | w <- asUniverse]
-        wp = worldPrior asModel
-        mp = messagePrior asModel
+  where test = [pretty w (speaker n w asModel) | w <- asUniverse]
 
 disp_l n = sequence_ (map putStrLn test)
-  where test = [pretty m (listener n m asLex1 asParams wp mp)  | m <- asMessages]
-        wp = worldPrior asModel
-        mp = messagePrior asModel
+  where test = [pretty m (listener n m asModel) | m <- asMessages]
 
 disp_L n = sequence_ (map putStrLn test)
-  where test = [pretty m (lexicaListener n m asParams wp mp lp) | m <- asMessages]
-        wp = worldPrior asModel
-        mp = messagePrior asModel
-        lp = lexiconPrior asModel
-
+  where test = [pretty m (lexicaListener n m asModel) | m <- asMessages]
