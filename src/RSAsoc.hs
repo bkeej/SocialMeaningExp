@@ -17,13 +17,23 @@ import           Utils
 -- Model-theoretic stuff
 --
 
-data Indice = Indice (String,String)
-  deriving (Show,Eq)
+-- Social indices are lists of properties, intended to be 
+-- mutually-inconsistent e.g., articulate / inarticulate
+type Properties = [String]
 
-data Field = Field [Indice]
-  deriving (Show, Eq)
+-- Indexical Fields are sets of properties
+type IField = [Properties]
 
-data Persona = 
+-- Reserve the term Eckert-Montague Fields 
+-- for maximal consistent subsets of some set of properties. 
+type EMField = [Properties]
+
+-- Personae generates EMFields from IFields
+personae :: IField -> EMField
+personae p = sequence p
+
+--Reserve Persona for members of an EMField
+type Persona = Properties
 
 data World = R1 | R2 | R3
   deriving (Show, Eq, Enum)
