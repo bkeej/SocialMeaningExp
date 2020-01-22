@@ -4,7 +4,13 @@ The reasoning behind the hard fork is I have no intention of submitting pull req
 
 The current additions here include:
 
-	* RSAsoc.hs which implements Social Meaning Games for dogwhistles ([Burnett 2018][6] and [Henderson & McCready 2018][5])
+-	RSAsoc.hs which implements Social Meaning Games for dogwhistles 
+	([Burnett 2018][6] and [Henderson & McCready 2018][5]) and an example from Henderson & McCready 2018.
+
+Currently working on adding:
+
+-	Simulations with multiple interacting agents to model the
+	evolution of dogwhistles in a speech community.
 
 [1]: https://web.engr.oregonstate.edu/~erwig/papers/PFP_JFP06.pdf
 [2]: http://www.randomhacks.net/2007/02/21/refactoring-probability-distributions/
