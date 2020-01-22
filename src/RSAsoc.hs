@@ -27,7 +27,6 @@ type Properties = [Property]
 -- Indexical Fields are sets of properties
 type IField = [Properties]
 
-
 -- Reserve the term Eckert-Montague Fields for maximal 
 -- consistent subsets of some set of properties.
 type EMField = [Properties]
@@ -45,7 +44,6 @@ data Message = M String
 --Messages are not interpreted in worlds, but bear social meaning, 
 --namely they denote the set of personas they are consistent with.
 type Lexicon = Message -> EMField -> [Persona]
-
 
 -- Return the set of personas in the EMField consistent 
 -- with message M x.
