@@ -17,9 +17,12 @@ import           Utils
 -- Model-theoretic stuff
 --
 
+data Property = P String
+  deriving (Show, Eq)
+
 -- Social indices are lists of properties, intended to be 
--- mutually-inconsistent e.g., articulate / inarticulate
-type Properties = [String]
+-- mutually-inconsistent e.g., P articulate / P inarticulate
+type Properties = [Property]
 
 -- Indexical Fields are sets of properties
 type IField = [Properties]
