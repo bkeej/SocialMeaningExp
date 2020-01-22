@@ -58,8 +58,15 @@ field = personae properties
 -}
 type Lexicon = Message -> EMField -> [Persona]
 
+{-
+ - Return the set of personas in the EMField consistent 
+ - with message M x.
+-}
+
 eval :: Lexicon
-eval (M x) f = [i | i <- f, (P p) <- i, p==x]
+eval (M x) f = [i | i <- f, 
+                (P p) <- i, 
+                p==x]
 
 
 
