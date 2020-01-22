@@ -1,40 +1,14 @@
-Some tools for probabilistic calculating and linguistic applications. Uses the
-Probability monads detailed by [Erwig & Kollmansberger (2006)][1] and expanded
-on by Eric Kidd ([here][2], [here][3], and [here][4]).
+Hard fork of the beautiful prob-tools package of Simon Charlow and Dylan Bumford ([here][4]). They implement probability monads detailed by [Erwig & Kollmansberger (2006)][1] and expanded on by Eric Kidd ([here][2], [here][3], and [here][4]), and then provide a few linguistic experiments / explorations.
 
-Super preliminary for now --- these are more learning tools for me than
-scientific tools for you. Seems like the only way I can learn new formal things
-these days is by making myself code up an implementation. 🤫
+The reasoning behind the hard fork is I have no intention of submitting pull requests for these experiments, aka my bullshit.
 
-`Utils.hs` has the basic monad transformer for probabilistic computing (coarser
-semirings are acceptable too). `Prob.hs` uses this transformer to define
-various probabilistic monads, with support for Bayesian calculations and
-sampling functions. All of this is based pretty directly on Kidd's work.
+The current additions here include:
 
-`RSA.hs` implements a simple speaker-oriented Rational Speech Acts model using
-these tools. `Scalar.hs` extends this to hearer-oriented scalar implicature
-with lexical uncertainty. Look at how straightforward the agents are to define
-using the monadic probability interface. It's nice.
-
-Some things I'm thinking about:
-
--   Embedded implicature, à la [Potts et al (2015)][5]; compositional issues.
-
--   Helping yourself to lexical scales vs. not (cf. Potts et al again, as well
-    as [Russell 2012][6]).
-
--   Abstractions underlying the various RSA models (or other kinds of formal
-    pragmatic models, e.g., IBR). Is there a most-general perspective?
-
--   The [scalar implicatures of exceptionally scoping indefinites][7]. I think
-    the lexical uncertainty models may work nicely here, but I should check.
-
--   How (normalizable) semirings coarser than probabilities might be useful.
+	* RSAsoc.hs which implements Social Meaning Games for dogwhistles ([Burnett 2018][6] and [Henderson & McCready 2018][5])
 
 [1]: https://web.engr.oregonstate.edu/~erwig/papers/PFP_JFP06.pdf
 [2]: http://www.randomhacks.net/2007/02/21/refactoring-probability-distributions/
 [3]: http://www.randomhacks.net/files/build-your-own-probability-monads.pdf
-[4]: https://github.com/emk/haskell-probability-monads
-[5]: https://academic.oup.com/jos/article-abstract/33/4/755/2563037
-[6]: http://semanticsarchive.net/Archive/WY1YTRhM/
-[7]: http://ling.auf.net/lingbuzz/003181
+[4]: https://github.com/schar/prob-tools
+[5]: https://www.rhenderson.net/resources/papers/how_dogwhistles_work.pdf
+[6]: http://www.heatherburnett.net/uploads/9/6/6/0/96608942/jofs_burnett.pdf
