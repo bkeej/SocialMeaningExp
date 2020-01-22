@@ -18,7 +18,7 @@ import           Utils
 --
 
 data Property = P String
-  deriving (Show, Eq)
+  deriving (Show, Eq, Enum)
 
 -- Social indices are lists of properties, intended to be 
 -- mutually-inconsistent e.g., P articulate / P inarticulate
@@ -38,13 +38,21 @@ personae p = sequence p
 --Reserve Persona for members of an EMField
 type Persona = Properties
 
-data World = R1 | R2 | R3
+data Message = M String
   deriving (Show, Eq, Enum)
 
-data Message = Beard | Glasses | Tie
-  deriving (Show, Eq, Enum)
+-- Messages are not interpreted in worlds, but bear
+-- social meaning, namely they denote the set of personas
+-- they are consistent with
+type Lexicon = Message -> [Persona]
 
-type Lexicon = Message -> [World]
+
+-- data World = R1 | R2 | R3
+--   deriving (Show, Eq, Enum)
+
+-- data Message = Beard | Glasses | Tie
+--   deriving (Show, Eq, Enum)
+
 
 eval :: Lexicon
 eval Beard   = [R1]
