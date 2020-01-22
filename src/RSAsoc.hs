@@ -18,7 +18,7 @@ import           Utils
 --
 
 data Property = P String
-  deriving (Show, Eq, Enum)
+  deriving (Show, Eq)
 {-
  - Social indices are lists of properties, intended to be 
  - mutually-inconsistent e.g., P articulate / P inarticulate.
@@ -42,13 +42,13 @@ personae p = sequence p
 type Persona = Properties
 
 data Message = M String
-  deriving (Show, Eq, Enum)
+  deriving (Show, Eq)
 
 --
 -- Stein example model from Henderson & McCready 2018
 --
 
-properties = [P "AntiVax", P "ProVax", P "AntiCorp", P "ProCorp"]
+properties = [[P "AntiVax", P "ProVax"], [P "AntiCorp", P "ProCorp"]]
 
 field = personae properties
 
@@ -59,7 +59,7 @@ field = personae properties
 type Lexicon = Message -> EMField -> [Persona]
 
 eval :: Lexicon
-eval (M x) f = [(P p) | (P p) <- f, p = x]
+eval (M x) f = [i | i <- f, (P p) <- i, p==x]
 
 
 
