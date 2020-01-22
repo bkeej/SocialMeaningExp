@@ -52,7 +52,6 @@ eval (M x) f = [i | i <- f,
                 (P p) <- i, 
                 p==x]
 
-
 --
 -- Stein example model from Henderson & McCready 2018
 --
