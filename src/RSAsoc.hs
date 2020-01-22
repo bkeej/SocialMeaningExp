@@ -19,19 +19,17 @@ import           Utils
 
 data Property = P String
   deriving (Show, Eq)
-{-
- - Social indices are lists of properties, intended to be 
- - mutually-inconsistent e.g., P articulate / P inarticulate.
--}
+
+-- Social indices are lists of properties, intended to be 
+-- mutually-inconsistent e.g., P articulate / P inarticulate.
 type Properties = [Property]
 
 -- Indexical Fields are sets of properties
 type IField = [Properties]
 
-{-
- - Reserve the term Eckert-Montague Fields for maximal 
- - consistent subsets of some set of properties.
--}
+
+-- Reserve the term Eckert-Montague Fields for maximal 
+-- consistent subsets of some set of properties.
 type EMField = [Properties]
 
 -- Personae generates EMFields from IFields
@@ -44,29 +42,27 @@ type Persona = Properties
 data Message = M String
   deriving (Show, Eq)
 
+--Messages are not interpreted in worlds, but bear social meaning, 
+--namely they denote the set of personas they are consistent with.
+type Lexicon = Message -> EMField -> [Persona]
+
+
+-- Return the set of personas in the EMField consistent 
+-- with message M x.
+eval :: Lexicon
+eval (M x) f = [i | i <- f, 
+                (P p) <- i, 
+                p==x]
+
+
 --
 -- Stein example model from Henderson & McCready 2018
 --
 
 properties = [[P "AntiVax", P "ProVax"], [P "AntiCorp", P "ProCorp"]]
 
-field = personae properties
+emfield = personae properties
 
-{- 
- - Messages are not interpreted in worlds, but bear social meaning, 
- - namely they denote the set of personas they are consistent with.
--}
-type Lexicon = Message -> EMField -> [Persona]
-
-{-
- - Return the set of personas in the EMField consistent 
- - with message M x.
--}
-
-eval :: Lexicon
-eval (M x) f = [i | i <- f, 
-                (P p) <- i, 
-                p==x]
 
 
 
