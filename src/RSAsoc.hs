@@ -1,9 +1,9 @@
 {-
- - Implements a simple RSA-type model using BDDist (Prob.hs), sans costs and
- - temperatures. See Monroe & Potts 2015[^1] (Figure 1) for the model assumed
- - here. Running `disp_s 1` reproduces the table in their Figure (1d).
+ - Implements extention of Burnett-style Social Meaning Games[^1] for dogwhistles 
+ - following work by Henderson and McCready[^2]. Based on RSA.hs. 
  -
- - [^1]: https://nlp.stanford.edu/pubs/monroe2015learning.pdf
+ - [^1]: https://www.rhenderson.net/resources/papers/how_dogwhistles_work.pdf
+ - [^2]: http://www.heatherburnett.net/uploads/9/6/6/0/96608942/jofs_burnett.pdf
 -}
 
 module RSAsoc where
