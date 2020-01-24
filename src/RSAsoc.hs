@@ -38,15 +38,6 @@ personae p = sequence p
 -- Reserve Persona for members of an EMField
 type Persona = Properties
 
-data Message = BigPharma | CorpSci
-  deriving (Show, Eq)
-
-type Denotation = Message -> Properties
-
-deno :: Denotation
-deno BigPharma = [P "AntiVax", P "AntiCorp"]
-deno CorpSci = [P "AntiVax", P "AntiCorp"]
-
 -- Messages are not interpreted in worlds, but bear social meaning, 
 -- namely they denote the set of personas they are consistent with.
 type Lexicon = Message -> EMField -> [Persona]
@@ -58,70 +49,79 @@ eval x f = [i | i <- f,
             p <- i, 
             p `elem` (deno x)]
 
--- --
--- -- Stein example denotations from Henderson & McCready 2018
--- --
+--
+-- Stein example denotations from Henderson & McCready 2018
+--
 
--- properties = [[P "AntiVax", P "ProVax"], [P "AntiCorp", P "ProCorp"]]
+data Message = BigPharma | CorpSci
+  deriving (Show, Eq, Enum)
 
--- emfield = personae properties
+type Denotation = Message -> Properties
+
+deno :: Denotation
+deno BigPharma = [P "AntiVax", P "AntiCorp"]
+deno CorpSci = [P "AntiVax", P "AntiCorp"]
+
+properties = [[P "AntiVax", P "ProVax"], [P "AntiCorp", P "ProCorp"]]
+
+emfield = personae properties
 
 -- -- messages = [M "AntiVax", M "ProVax", M "AntiCorp", M "ProCorp"]
 
--- --
--- -- Model parameters
--- --
+--
+-- Model parameters
+--
 
--- -- Across-the-board no-cost messages
--- cost _ = 0
+-- Across-the-board no-cost messages
+cost _ = 0
 
--- -- Higher values ~> more eager pragmatic reasoning
--- temperature = 1 
+-- Higher values ~> more eager pragmatic reasoning
+temperature = 1 
 
--- worldPrior :: Dist m => m Persona
--- worldPrior = uniform emfield
+worldPrior :: Dist m => m Persona
+worldPrior = uniform emfield
 
--- messagePrior :: Dist m => m Message
--- messagePrior = uniform messages
+messagePrior :: Dist m => m Message
+messagePrior = uniform [BigPharma ..]
 
--- -- --
--- -- -- Mutually recursive pragmatic reasoning
--- -- --
+--
+-- Mutually recursive pragmatic reasoning
+--
 
--- speaker :: Int -> Persona -> Lexicon -> BDDist Message
--- speaker n w sem = bayes $ do
---   m <- messagePrior
---   scaleProb m $ if n <= 0   -- literal speaker
---                   then guard (w `elem` sem m emfield)
---                   else do   -- pragmatic speaker
---                     w' <- listener n m sem
---                     guard (w' == w)
---   return m
+speaker :: Int -> Persona -> Lexicon -> BDDist Message
+speaker n w sem = bayes $ do
+  m <- messagePrior
+  scaleProb m $ if n <= 0   -- literal speaker
+                  then guard (w `elem` sem m emfield)
+                  else do   -- pragmatic speaker
+                    w' <- listener n m sem
+                    guard (w' == w)
+  return m
 
--- listener :: Int -> Message -> Lexicon -> BDDist Persona
--- listener n m sem = bayes $ do
---   w  <- worldPrior
---   m' <- speaker (n-1) w sem
---   guard (m' == m)
---   return w
+listener :: Int -> Message -> Lexicon -> BDDist Persona
+listener n m sem = bayes $ do
+  w  <- worldPrior
+  m' <- speaker (n-1) w sem
+  guard (m' == m)
+  return w
 
--- -- Helper functions for scaling probabilities
--- scaleProb :: Message -> BDDist a -> BDDist a
--- scaleProb m = modify (exp . (temperature *) . subtract (cost m) . log)
+-- Helper functions for scaling probabilities
+scaleProb :: Message -> BDDist a -> BDDist a
+scaleProb m = modify (exp . (temperature *) . subtract (cost m) . log)
 
--- modify :: (Prob -> Prob) -> BDDist a -> BDDist a
--- modify f mx = MaybeT (MassT f'd)
---   where f'd = [Mass (f n) x | Mass n x <- runMassT (runMaybeT mx)]
+modify :: (Prob -> Prob) -> BDDist a -> BDDist a
+modify f mx = MaybeT (MassT f'd)
+  where f'd = [Mass (f n) x | Mass n x <- runMassT (runMaybeT mx)]
 
--- -- --
--- -- -- Testing the model
--- -- --
+--
+-- Testing the model
+--
 
--- disp_s n = sequence_ (map print test)
---   where test = [pretty w (speaker n w eval)   | w <- emfield]
+disp_s n = sequence_ (map print test)
+  where test = [pretty w (speaker n w eval)   | w <- emfield]
 
--- disp_l n = sequence_ (map print test)
---   where test = [pretty m (listener n m eval)  | m <- messages]
+disp_l n = sequence_ (map print test)
+  where test = [pretty m (listener n m eval)  | m <- [BigPharma ..]]
 
--- pretty o mx = "P(.|"++ show o ++"): "++ concat [show x ++" = "++ show (getSum
---   n) ++", " | Mass n (Just x) <- runMassT (runMaybeT mx)]
+pretty o mx = "P(.|"++ show o ++"): "++ concat [show x ++" = "++ show (getSum
+  n) ++", " | Mass n (Just x) <- runMassT (runMaybeT mx)]
