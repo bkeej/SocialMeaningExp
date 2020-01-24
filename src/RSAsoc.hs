@@ -55,7 +55,7 @@ type Lexicon = Message -> EMField -> [Persona]
 -- with message M x.
 eval :: Lexicon
 eval x f = [i | i <- f, 
-            (P p) <- i, 
+            p <- i, 
             p `elem` (deno x)]
 
 -- --
