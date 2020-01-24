@@ -99,13 +99,13 @@ messagePrior = uniform messages
 --   guard (m' == m)
 --   return w
 
--- -- Helper functions for scaling probabilities
--- scaleProb :: Message -> BDDist a -> BDDist a
--- scaleProb m = modify (exp . (temperature *) . subtract (cost m) . log)
+-- Helper functions for scaling probabilities
+scaleProb :: Message -> BDDist a -> BDDist a
+scaleProb m = modify (exp . (temperature *) . subtract (cost m) . log)
 
--- modify :: (Prob -> Prob) -> BDDist a -> BDDist a
--- modify f mx = MaybeT (MassT f'd)
---   where f'd = [Mass (f n) x | Mass n x <- runMassT (runMaybeT mx)]
+modify :: (Prob -> Prob) -> BDDist a -> BDDist a
+modify f mx = MaybeT (MassT f'd)
+  where f'd = [Mass (f n) x | Mass n x <- runMassT (runMaybeT mx)]
 
 -- --
 -- -- Testing the model
