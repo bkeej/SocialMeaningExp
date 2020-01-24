@@ -62,19 +62,6 @@ emfield = personae properties
 
 messages = [M "AntiVax", M "ProVax", M "AntiCorp", M "ProCorp"]
 
-{- 
-data World = R1 | R2 | R3
-deriving (Show, Eq, Enum)
-
-data Message = Beard | Glasses | Tie
-deriving (Show, Eq, Enum)
-
-eval :: Lexicon
-eval Beard   = [R1]
-eval Glasses = [R1, R2]
-eval Tie     = [R2, R3]
--}
-
 --
 -- Model parameters
 --
