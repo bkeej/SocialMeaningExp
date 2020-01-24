@@ -111,11 +111,11 @@ modify f mx = MaybeT (MassT f'd)
 -- -- Testing the model
 -- --
 
--- disp_s n = sequence_ (map print test)
---   where test = [pretty w (speaker n w eval)   | w <- [R1 ..]]
+disp_s n = sequence_ (map print test)
+  where test = [pretty w (speaker n w eval)   | w <- emfield]
 
--- disp_l n = sequence_ (map print test)
---   where test = [pretty m (listener n m eval)  | m <- [Beard ..]]
+disp_l n = sequence_ (map print test)
+  where test = [pretty m (listener n m eval)  | m <- messages]
 
--- pretty o mx = "P(.|"++ show o ++"): "++ concat [show x ++" = "++ show (getSum
---   n) ++", " | Mass n (Just x) <- runMassT (runMaybeT mx)]
+pretty o mx = "P(.|"++ show o ++"): "++ concat [show x ++" = "++ show (getSum
+  n) ++", " | Mass n (Just x) <- runMassT (runMaybeT mx)]
