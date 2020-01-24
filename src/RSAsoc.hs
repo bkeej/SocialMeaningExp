@@ -67,7 +67,7 @@ messages = [M "AntiVax", M "ProVax", M "AntiCorp", M "ProCorp"]
 --
 
 -- Across-the-board no-cost messages
--- cost _ = 0
+cost _ = 0
 
 -- Higher values ~> more eager pragmatic reasoning
 temperature = 1 
