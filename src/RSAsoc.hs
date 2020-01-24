@@ -17,56 +17,55 @@ import           Utils
 -- Model structure
 --
 
-data Property = P String
-  deriving (Show, Eq)
-
--- Social indices are lists of properties, intended to be 
--- mutually-inconsistent e.g., P articulate / P inarticulate.
-type Properties = [Property]
-
--- Indexical Fields are sets of properties
-type IField = [Properties]
+-- A social index is a set of features
+type Index = [Feature]
 
 -- Reserve the term Eckert-Montague Fields for maximal 
--- consistent subsets of some set of properties.
-type EMField = [Properties]
+-- consistent subsets of some set of features.
+type EMField = [Index]
 
--- Personae generates EMFields from IFields
-personae :: IField -> EMField
+-- Personae generates EMFields from a set of social indices
+personae :: [Index] -> EMField
 personae p = sequence p
 
--- Reserve Persona for members of an EMField
-type Persona = Properties
+-- Reserve the term Persona for members of an EMField, i.e.,
+-- a maximally consistent set of features 
+type Persona = [Feature]
 
 -- Messages are not interpreted in worlds, but bear social meaning, 
--- namely they denote the set of personas they are consistent with.
+-- namely they are interpreted as the set of personas they are consistent with.
 type Lexicon = Message -> EMField -> [Persona]
 
 -- Return the set of personas in the EMField consistent 
--- with message M x.
+-- with message. Note the eval of a message is based on
+-- its denotation, which is just a set of features.
 eval :: Lexicon
-eval x f = [i | i <- f, 
+eval m f = [i | i <- f, 
             p <- i, 
-            p `elem` (deno x)]
+            p `elem` (deno m)]
 
 --
 -- Stein example denotations from Henderson & McCready 2018
 --
 
+data Feature = AntiVax | ProVax | ProCorp | AntiCorp
+  deriving (Show, Eq, Enum)
+
+indices = [[AntiVax,ProVax], [AntiCorp,ProCorp]]
+
+field = personae indices
+
 data Message = BigPharma | CorpSci
   deriving (Show, Eq, Enum)
 
-type Denotation = Message -> Properties
+data Group = Ingroup | Naive | Savvy
+  deriving (Show, Eq, Enum)
+
+type Denotation = Message -> [Feature]
 
 deno :: Denotation
-deno BigPharma = [P "AntiVax", P "AntiCorp"]
-deno CorpSci = [P "AntiVax", P "AntiCorp"]
-
-properties = [[P "AntiVax", P "ProVax"], [P "AntiCorp", P "ProCorp"]]
-
-emfield = personae properties
-
--- -- messages = [M "AntiVax", M "ProVax", M "AntiCorp", M "ProCorp"]
+deno BigPharma = [AntiVax, AntiCorp]
+deno CorpSci = [AntiVax, AntiCorp]
 
 --
 -- Model parameters
@@ -75,11 +74,18 @@ emfield = personae properties
 -- Across-the-board no-cost messages
 cost _ = 0
 
+-- Affective values of personas for speakers and listeners
+-- valueS :: Persona -> Group -> Int 
+-- valueS = 
+
+-- valueL :: Persona -> Group -> Int
+-- valueL p g = 
+
 -- Higher values ~> more eager pragmatic reasoning
 temperature = 1 
 
 worldPrior :: Dist m => m Persona
-worldPrior = uniform emfield
+worldPrior = uniform field
 
 messagePrior :: Dist m => m Message
 messagePrior = uniform [BigPharma ..]
@@ -92,7 +98,7 @@ speaker :: Int -> Persona -> Lexicon -> BDDist Message
 speaker n w sem = bayes $ do
   m <- messagePrior
   scaleProb m $ if n <= 0   -- literal speaker
-                  then guard (w `elem` sem m emfield)
+                  then guard (w `elem` sem m field)
                   else do   -- pragmatic speaker
                     w' <- listener n m sem
                     guard (w' == w)
@@ -118,7 +124,7 @@ modify f mx = MaybeT (MassT f'd)
 --
 
 disp_s n = sequence_ (map print test)
-  where test = [pretty w (speaker n w eval)   | w <- emfield]
+  where test = [pretty w (speaker n w eval)   | w <- field]
 
 disp_l n = sequence_ (map print test)
   where test = [pretty m (listener n m eval)  | m <- [BigPharma ..]]
