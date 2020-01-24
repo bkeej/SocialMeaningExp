@@ -79,9 +79,11 @@ eval Tie     = [R2, R3]
 -- Model parameters
 --
 
--- cost _ = 0      -- Across-the-board no-cost messages
+-- Across-the-board no-cost messages
+-- cost _ = 0
 
--- temperature = 1 -- Higher values ~> more eager pragmatic reasoning
+-- Higher values ~> more eager pragmatic reasoning
+temperature = 1 
 
 -- worldPrior :: Dist m => m World
 -- worldPrior = uniform [R1 ..]
