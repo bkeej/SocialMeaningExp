@@ -53,7 +53,7 @@ eval (M x) f = [i | i <- f,
                 p==x]
 
 --
--- Stein example model from Henderson & McCready 2018
+-- Stein example denotations from Henderson & McCready 2018
 --
 
 properties = [[P "AntiVax", P "ProVax"], [P "AntiCorp", P "ProCorp"]]
