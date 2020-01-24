@@ -60,8 +60,7 @@ properties = [[P "AntiVax", P "ProVax"], [P "AntiCorp", P "ProCorp"]]
 
 emfield = personae properties
 
-
-
+messages = [M "AntiVax", M "ProVax", M "AntiCorp", M "ProCorp"]
 
 {- 
 data World = R1 | R2 | R3
