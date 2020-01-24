@@ -72,7 +72,7 @@ messages = [M "AntiVax", M "ProVax", M "AntiCorp", M "ProCorp"]
 -- Higher values ~> more eager pragmatic reasoning
 temperature = 1 
 
-worldPrior :: Dist m => m EMField
+worldPrior :: Dist m => m Properties
 worldPrior = uniform emfield
 
 messagePrior :: Dist m => m Message
