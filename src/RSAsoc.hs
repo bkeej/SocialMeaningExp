@@ -85,11 +85,11 @@ eval Tie     = [R2, R3]
 -- Higher values ~> more eager pragmatic reasoning
 temperature = 1 
 
--- worldPrior :: Dist m => m World
--- worldPrior = uniform [R1 ..]
+worldPrior :: Dist m => m EMField
+worldPrior = uniform emfield
 
--- messagePrior :: Dist m => m Message
--- messagePrior = uniform [Beard ..]
+messagePrior :: Dist m => m Message
+messagePrior = uniform messages
 
 -- --
 -- -- Mutually recursive pragmatic reasoning
