@@ -72,7 +72,7 @@ cost _ = 0
 -- Higher values ~> more eager pragmatic reasoning
 temperature = 1 
 
-worldPrior :: Dist m => m Properties
+worldPrior :: Dist m => m Persona
 worldPrior = uniform emfield
 
 messagePrior :: Dist m => m Message
@@ -82,22 +82,22 @@ messagePrior = uniform messages
 -- -- Mutually recursive pragmatic reasoning
 -- --
 
--- speaker :: Int -> World -> Lexicon -> BDDist Message
--- speaker n w sem = bayes $ do
---   m <- messagePrior
---   scaleProb m $ if n <= 0   -- literal speaker
---                   then guard (w `elem` sem m)
---                   else do   -- pragmatic speaker
---                     w' <- listener n m sem
---                     guard (w' == w)
---   return m
+speaker :: Int -> Persona -> Lexicon -> BDDist Message
+speaker n w sem = bayes $ do
+  m <- messagePrior
+  scaleProb m $ if n <= 0   -- literal speaker
+                  then guard (w `elem` sem m emfield)
+                  else do   -- pragmatic speaker
+                    w' <- listener n m sem
+                    guard (w' == w)
+  return m
 
--- listener :: Int -> Message -> Lexicon -> BDDist World
--- listener n m sem = bayes $ do
---   w  <- worldPrior
---   m' <- speaker (n-1) w sem
---   guard (m' == m)
---   return w
+listener :: Int -> Message -> Lexicon -> BDDist Persona
+listener n m sem = bayes $ do
+  w  <- worldPrior
+  m' <- speaker (n-1) w sem
+  guard (m' == m)
+  return w
 
 -- Helper functions for scaling probabilities
 scaleProb :: Message -> BDDist a -> BDDist a
