@@ -58,7 +58,7 @@ field = personae indices
 data Message = BigPharma | CorpSci
   deriving (Show, Eq, Enum)
 
-data Group = Ingroup | Naive | Savvy
+data Group = Ingroup | Naive | Savvy | Uniform
   deriving (Show, Eq, Enum)
 
 type Denotation = Message -> [Feature]
@@ -84,32 +84,41 @@ cost _ = 0
 -- Higher values ~> more eager pragmatic reasoning
 temperature = 1 
 
-worldPrior :: Dist m => m Persona
-worldPrior = uniform field
+personaPrior :: Dist m => m Persona
+personaPrior = uniform field
 
-messagePrior :: Dist m => m Message
-messagePrior = uniform [BigPharma ..]
+messagePrior :: Dist m => Group -> Persona -> m Message
+messagePrior Uniform x = uniform [BigPharma ..]
+messagePrior Ingroup x = uniform [BigPharma ..]
+messagePrior Naive x = uniform [BigPharma ..]
+messagePrior Savvy x = uniform [BigPharma ..]
 
 --
 -- Mutually recursive pragmatic reasoning
 --
+-- listener :: int -> Group -> Message -> Lexicon -> BDDist Persona
+-- listener n g m sem = bayes $ do
+--   persona <- personaPrior
+--   scaleProb m $ if n <= 0
+--                   then if
 
-speaker :: Int -> Persona -> Lexicon -> BDDist Message
-speaker n w sem = bayes $ do
-  m <- messagePrior
-  scaleProb m $ if n <= 0   -- literal speaker
-                  then guard (w `elem` sem m field)
-                  else do   -- pragmatic speaker
-                    w' <- listener n m sem
-                    guard (w' == w)
-  return m
 
-listener :: Int -> Message -> Lexicon -> BDDist Persona
-listener n m sem = bayes $ do
-  w  <- worldPrior
-  m' <- speaker (n-1) w sem
-  guard (m' == m)
-  return w
+-- speaker :: Int -> Persona -> Lexicon -> BDDist Message
+-- speaker n w sem = bayes $ do
+--   m <- messagePrior
+--   scaleProb m $ if n <= 0   -- literal speaker
+--                   then guard (w `elem` sem m field)
+--                   else do   -- pragmatic speaker
+--                     w' <- listener n m sem
+--                     guard (w' == w)
+--   return m
+
+-- listener :: Int -> Message -> Lexicon -> BDDist Persona
+-- listener n m sem = bayes $ do
+--   w  <- worldPrior
+--   m' <- speaker (n-1) w sem
+--   guard (m' == m)
+--   return w
 
 -- Helper functions for scaling probabilities
 scaleProb :: Message -> BDDist a -> BDDist a
@@ -123,11 +132,11 @@ modify f mx = MaybeT (MassT f'd)
 -- Testing the model
 --
 
-disp_s n = sequence_ (map print test)
-  where test = [pretty w (speaker n w eval)   | w <- field]
+-- disp_s n = sequence_ (map print test)
+--   where test = [pretty w (speaker n w eval)   | w <- field]
 
-disp_l n = sequence_ (map print test)
-  where test = [pretty m (listener n m eval)  | m <- [BigPharma ..]]
+-- disp_l n = sequence_ (map print test)
+--   where test = [pretty m (listener n m eval)  | m <- [BigPharma ..]]
 
-pretty o mx = "P(.|"++ show o ++"): "++ concat [show x ++" = "++ show (getSum
-  n) ++", " | Mass n (Just x) <- runMassT (runMaybeT mx)]
+-- pretty o mx = "P(.|"++ show o ++"): "++ concat [show x ++" = "++ show (getSum
+--   n) ++", " | Mass n (Just x) <- runMassT (runMaybeT mx)]
