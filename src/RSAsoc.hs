@@ -93,20 +93,20 @@ personaPrior g = weighted [Mass 5 [ProVax,ProCorp], Mass 40 [ProVax,AntiCorp], M
 -- personaPrior Uniform = uniform field
 
 messagePrior :: Dist m => Group -> Persona -> m Message
-messagePrior Ingroup [AntiVax, AntiCorp] = weighted [Mass 80 BigPharma, Mass 20 CorpSci]
-messagePrior Ingroup [AntiVax, ProCorp] = weighted [Mass 10 BigPharma, Mass 90 CorpSci]
-messagePrior Ingroup [ProVax, AntiCorp] = weighted [Mass 10 BigPharma, Mass 90 CorpSci]
-messagePrior Ingroup [ProVax, ProCorp] = weighted [Mass 0 BigPharma, Mass 100 CorpSci]
+messagePrior Ingroup [AntiVax, AntiCorp] = weighted [Mass 80 BigPharma, Mass 10 CorpSci]
+messagePrior Ingroup [AntiVax, ProCorp] = weighted [Mass 10 BigPharma, Mass 10 CorpSci]
+messagePrior Ingroup [ProVax, AntiCorp] = weighted [Mass 10 BigPharma, Mass 80 CorpSci]
+messagePrior Ingroup [ProVax, ProCorp] = weighted [Mass 0 BigPharma, Mass 60 CorpSci]
 
-messagePrior Savvy [AntiVax, AntiCorp] = weighted [Mass 80 BigPharma, Mass 20 CorpSci]
-messagePrior Savvy [AntiVax, ProCorp] = weighted [Mass 10 BigPharma, Mass 90 CorpSci]
-messagePrior Savvy [ProVax, AntiCorp] = weighted [Mass 10 BigPharma, Mass 90 CorpSci]
-messagePrior Savvy [ProVax, ProCorp] = weighted [Mass 0 BigPharma, Mass 100 CorpSci]
+messagePrior Savvy [AntiVax, AntiCorp] = weighted [Mass 80 BigPharma, Mass 10 CorpSci]
+messagePrior Savvy [AntiVax, ProCorp] = weighted [Mass 10 BigPharma, Mass 10 CorpSci]
+messagePrior Savvy [ProVax, AntiCorp] = weighted [Mass 10 BigPharma, Mass 00 CorpSci]
+messagePrior Savvy [ProVax, ProCorp] = weighted [Mass 0 BigPharma, Mass 60 CorpSci]
 
-messagePrior Naive [AntiVax, AntiCorp] = weighted [Mass 15 BigPharma, Mass 85 CorpSci]
-messagePrior Naive [AntiVax, ProCorp] = weighted [Mass 10 BigPharma, Mass 90 CorpSci]
-messagePrior Naive [ProVax, AntiCorp] = weighted [Mass 70 BigPharma, Mass 30 CorpSci]
-messagePrior Naive [ProVax, ProCorp] = weighted [Mass 0 BigPharma, Mass 100 CorpSci]
+messagePrior Naive [AntiVax, AntiCorp] = weighted [Mass 15 BigPharma, Mass 10 CorpSci]
+messagePrior Naive [AntiVax, ProCorp] = weighted [Mass 10 BigPharma, Mass 10 CorpSci]
+messagePrior Naive [ProVax, AntiCorp] = weighted [Mass 70 BigPharma, Mass 80 CorpSci]
+messagePrior Naive [ProVax, ProCorp] = weighted [Mass 0 BigPharma, Mass 60 CorpSci]
 
 messagePrior Uniform x = uniform [BigPharma ..]
 
