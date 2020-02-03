@@ -85,8 +85,12 @@ cost _ = 0
 temperature = 1 
 
 personaPrior :: Dist m => Group -> m Persona
-personaPrior Uniform = uniform field
-personaPrior g = uniform field
+personaPrior g = weighted [Mass 5 [ProVax,ProCorp], Mass 40 [ProVax,ProCorp], Mass 15 [AntiVax,ProCorp], Mass 40 [AntiVax,AntiCorp]]
+-- personaPrior Ingroup = uniform field
+-- personaPrior Savvy = uniform field
+-- personaPrior Naive = uniform field
+
+-- personaPrior Uniform = uniform field
 
 messagePrior :: Dist m => Group -> Persona -> m Message
 messagePrior Ingroup [AntiVax, AntiCorp] = weighted [Mass 80 BigPharma, Mass 20 CorpSci]
