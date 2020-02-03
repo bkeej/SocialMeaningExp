@@ -12,7 +12,7 @@ import           Control.Monad             (guard)
 import           Control.Monad.Trans.Maybe (MaybeT (MaybeT, runMaybeT))
 import           Prob
 import           Utils
-
+import           Data.List                 (nub)
 --
 -- Model structure
 --
@@ -40,7 +40,7 @@ type Lexicon = Message -> EMField -> [Persona]
 -- with message. Note the eval of a message is based on
 -- its denotation, which is just a set of features.
 eval :: Lexicon
-eval m f = [i | i <- f, 
+eval m f = Data.List.nub $ [i | i <- f, 
             p <- i, 
             p `elem` (deno m)]
 
@@ -65,7 +65,7 @@ type Denotation = Message -> [Feature]
 
 deno :: Denotation
 deno BigPharma = [AntiVax, AntiCorp]
-deno CorpSci = [AntiVax, AntiCorp]
+deno CorpSci = [ProVax, AntiCorp]
 
 --
 -- Model parameters
