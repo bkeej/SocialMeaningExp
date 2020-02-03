@@ -84,15 +84,22 @@ cost _ = 0
 -- Higher values ~> more eager pragmatic reasoning
 temperature = 1 
 
-personaPrior :: Dist m => m Persona
-personaPrior = uniform field
+personaPrior :: Dist m => Group -> m Persona
+personaPrior Uniform = uniform field
+personaPrior g = uniform field
 
 messagePrior :: Dist m => Group -> Persona -> m Message
-messagePrior Uniform [AntiVax, AntiCorp] = weighted [Mass 10 BigPharma, Mass 90 CorpSci]
 messagePrior Uniform x = uniform [BigPharma ..]
-messagePrior Ingroup x = uniform [BigPharma ..]
+
+messagePrior Ingroup [AntiVax, AntiCorp] = weighted [Mass 80 BigPharma, Mass 20 CorpSci]
+messagePrior Ingroup [AntiVax, ProCorp] = weighted [Mass 10 BigPharma, Mass 90 CorpSci]
+messagePrior Ingroup [ProVax, AntiCorp] = weighted [Mass 10 BigPharma, Mass 90 CorpSci]
+messagePrior Ingroup [ProVax, ProCorp] = weighted [Mass 0 BigPharma, Mass 100 CorpSci]
+
 messagePrior Naive x = uniform [BigPharma ..]
 messagePrior Savvy x = uniform [BigPharma ..]
+
+-- messagePrior Uniform [AntiVax, AntiCorp] = weighted [Mass 10 BigPharma, Mass 90 CorpSci]
 
 --
 -- Mutually recursive pragmatic reasoning
@@ -113,7 +120,7 @@ speaker n g w sem = bayes $ do
 
 listener :: Int -> Group -> Message -> Lexicon -> BDDist Persona
 listener n g m sem = bayes $ do
-  w  <- personaPrior
+  w  <- personaPrior g
   m' <- speaker (n-1) g w sem
   guard (m' == m)
   return w
