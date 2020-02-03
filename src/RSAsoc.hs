@@ -100,7 +100,7 @@ messagePrior Ingroup [ProVax, ProCorp] = weighted [Mass 0 BigPharma, Mass 60 Cor
 
 messagePrior Savvy [AntiVax, AntiCorp] = weighted [Mass 80 BigPharma, Mass 10 CorpSci]
 messagePrior Savvy [AntiVax, ProCorp] = weighted [Mass 10 BigPharma, Mass 10 CorpSci]
-messagePrior Savvy [ProVax, AntiCorp] = weighted [Mass 10 BigPharma, Mass 00 CorpSci]
+messagePrior Savvy [ProVax, AntiCorp] = weighted [Mass 10 BigPharma, Mass 80 CorpSci]
 messagePrior Savvy [ProVax, ProCorp] = weighted [Mass 0 BigPharma, Mass 60 CorpSci]
 
 messagePrior Naive [AntiVax, AntiCorp] = weighted [Mass 15 BigPharma, Mass 10 CorpSci]
