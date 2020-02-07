@@ -122,21 +122,21 @@ messagePrior Uniform x = uniform [BigPharma ..]
 
 
 speaker :: Int -> Group -> Persona -> Lexicon -> BDDist Message
-speaker n g w sem = bayes $ do
-  m <- messagePrior g w
+speaker n g p sem = bayes $ do
+  m <- messagePrior g p
   scaleProb m $ if n <= 0   -- literal speaker
-                  then guard (w `elem` sem m field)
+                  then guard (p `elem` sem m field)
                   else do   -- pragmatic speaker
-                    w' <- listener n g m sem
-                    guard (w' == w)
+                    p' <- listener n g m sem
+                    guard (p' == p)
   return m
 
 listener :: Int -> Group -> Message -> Lexicon -> BDDist Persona
 listener n g m sem = bayes $ do
-  w  <- personaPrior g
-  m' <- speaker (n-1) g w sem
+  p  <- personaPrior g
+  m' <- speaker (n-1) g p sem
   guard (m' == m)
-  return w
+  return p
 
 -- Helper functions for scaling probabilities
 scaleProb :: Message -> BDDist a -> BDDist a
