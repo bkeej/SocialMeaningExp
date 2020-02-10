@@ -138,7 +138,7 @@ listener n g m sem = bayes $ do
   guard (m' == m)
   return p
 
--- Utility
+-- Affective values
 
 vS :: Persona -> Float
 vS [ProVax,ProCorp] = 0
@@ -159,6 +159,14 @@ vL Naive [AntiVax,ProCorp] = 0
 vL Naive [AntiVax,AntiCorp] = 0
 
 vL Savvy x = vL Naive x
+
+-- Utility
+
+uSoc :: Message -> Persona -> Group -> Lexicon -> Float
+uSoc m p g l = log pr + vL g p * pr + vS p * pr
+  where Sum pr = [x | Mass x (Just y) <- runMassT (runMaybeT (RSAsoc.listener 1 g m eval)), y == p] !! 0
+
+
 
 -- Audiences
 type Audience = [Group]
