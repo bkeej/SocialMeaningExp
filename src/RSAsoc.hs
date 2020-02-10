@@ -161,9 +161,11 @@ vL Naive [AntiVax,AntiCorp] = 0
 vL Savvy x = vL Naive x
 
 -- Utility
+data Utility = Util Float
+  deriving (Show, Eq)
 
-uSoc :: Message -> Persona -> Group -> Lexicon -> Float
-uSoc m p g l = log pr + vL g p * pr + vS p * pr
+uSoc :: Message -> Persona -> Group -> Lexicon -> Utility
+uSoc m p g l = Util $ log pr + vL g p * pr + vS p * pr
   where Sum pr = [x | Mass x (Just y) <- runMassT (runMaybeT (RSAsoc.listener 1 g m eval)), y == p] !! 0
 
 
