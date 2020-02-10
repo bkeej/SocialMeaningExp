@@ -138,6 +138,16 @@ listener n g m sem = bayes $ do
   guard (m' == m)
   return p
 
+-- Utility
+
+-- Audiences
+Type Audience = [Group]
+
+-- Structured Audiences
+
+
+
+
 -- Helper functions for scaling probabilities
 scaleProb :: Message -> BDDist a -> BDDist a
 scaleProb m = modify (exp . (temperature *) . subtract (cost m) . log)
