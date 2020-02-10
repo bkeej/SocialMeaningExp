@@ -140,8 +140,28 @@ listener n g m sem = bayes $ do
 
 -- Utility
 
+vS :: Persona -> Float
+vS [ProVax,ProCorp] = 0
+vS [ProVax,AntiCorp] = 0
+vS [AntiVax,ProCorp] = 0
+vS [AntiVax,AntiCorp] = 0
+
+
+vL :: Group -> Persona -> Float
+vL Ingroup [ProVax,ProCorp] = 0
+vL Ingroup [ProVax,AntiCorp] = 0
+vL Ingroup [AntiVax,ProCorp] = 0
+vL Ingroup [AntiVax,AntiCorp] = 0
+
+vL Naive [ProVax,ProCorp] = 0
+vL Naive [ProVax,AntiCorp] = 0
+vL Naive [AntiVax,ProCorp] = 0
+vL Naive [AntiVax,AntiCorp] = 0
+
+vL Savvy x = vL Naive x
+
 -- Audiences
-Type Audience = [Group]
+type Audience = [Group]
 
 -- Structured Audiences
 
