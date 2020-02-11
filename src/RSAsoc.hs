@@ -1,6 +1,10 @@
 {-
  - Implements extention of Burnett-style Social Meaning Games[^1] for dogwhistles 
- - following work by Henderson and McCready[^2]. Based on RSA.hs. 
+ - following work by Henderson and McCready[^2]. Based on RSA.hs. Test the model by
+ - giving disp_util an audience with a particular distribution of Ingroup, Savvy, and
+ - Naive listeners---i.e. disp_util (audience 5 6 1), which will return the social 
+ - utility of each message. Compare to disp_util (audience 5 1 6) to see the dogwhistle
+ - effect, that is, the effect of swapping naive for savvy outgroup audience members.
  -
  - [^1]: https://www.rhenderson.net/resources/papers/how_dogwhistles_work.pdf
  - [^2]: http://www.heatherburnett.net/uploads/9/6/6/0/96608942/jofs_burnett.pdf
@@ -178,7 +182,7 @@ type Audience = [Group]
 
 -- Social utility expecting an audience argument
 uASoc :: Audience -> Message -> Persona -> Lexicon -> Float
-uSumSoc a m p l = sum $ map (\g -> uSoc m p g l) a 
+uASoc a m p l = sum $ map (\g -> uSoc m p g l) a 
 
 -- Social utility for a message suming over all personas expecting an audience argument
 uASocM :: Audience -> Message -> Lexicon -> Float
@@ -193,11 +197,10 @@ audience x y z = take x (repeat Ingroup) ++ take y (repeat Savvy) ++ take z (rep
 -- Testing the model
 --
 
-mostlyNaive = audience 5 1 6
+disp_util a = sequence_ (map print test)
+  where test = [prettyUtils m (uASocM a m eval) | m <- [BigPharma ..]]   
 
-mostlySavvy = audience 5 6 1
-
-disp_util a = [uSSoc a m p eval | p <- field, m <- [BigPharma ..]]   
+prettyUtils m x = "U("++ show m ++")=" ++ show x 
 
 disp_s n g = sequence_ (map print test)
   where test = [pretty w (speaker n g w eval)   | w <- field]
