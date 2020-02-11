@@ -168,7 +168,7 @@ vL Savvy x = vL Naive x
 -- Social utility calculation
 uSoc :: Message -> Persona -> Group -> Lexicon -> Float
 uSoc m p g l = pr + (vL g p * pr) + (vS p * pr)
-  where Sum pr = sum $ [x | Mass x (Just y) <- runMassT (runMaybeT (RSAsoc.listener 1 g m eval)), y == p]
+  where Sum pr = sum $ [x | Mass x (Just y) <- runMassT (runMaybeT (listener 1 g m eval)), y == p]
 
 
 -- Social utility for a message suming over all personas
