@@ -143,8 +143,6 @@ modify f mx = MaybeT (MassT f'd)
 -- Social Utility Calculations
 --
 
--- Affective values, here initialized with 0
-
 -- Speaker is a politician, i.e., no preference for persona, only want to maximize listener approval.
 vS :: Persona -> Float
 vS [ProVax,ProCorp] = 0
