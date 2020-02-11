@@ -149,17 +149,21 @@ vS [AntiVax,AntiCorp] = 0
 
 
 vL :: Group -> Persona -> Float
-vL Ingroup [ProVax,ProCorp] = 0
-vL Ingroup [ProVax,AntiCorp] = 0
-vL Ingroup [AntiVax,ProCorp] = 0
-vL Ingroup [AntiVax,AntiCorp] = 0
+vL Ingroup [ProVax,ProCorp] = -100
+vL Ingroup [ProVax,AntiCorp] = -100
+vL Ingroup [AntiVax,ProCorp] = 100
+vL Ingroup [AntiVax,AntiCorp] = 100
 
-vL Naive [ProVax,ProCorp] = 0
-vL Naive [ProVax,AntiCorp] = 0
-vL Naive [AntiVax,ProCorp] = 0
-vL Naive [AntiVax,AntiCorp] = 0
+vL Naive [ProVax,ProCorp] = 75
+vL Naive [ProVax,AntiCorp] = 75
+vL Naive [AntiVax,ProCorp] = -100
+vL Naive [AntiVax,AntiCorp] = -100
 
-vL Savvy x = vL Naive x
+vL Savvy [ProVax,ProCorp] = 100
+vL Savvy [ProVax,AntiCorp] = 100
+vL Savvy [AntiVax,ProCorp] = -100
+vL Savvy [AntiVax,AntiCorp] = -100
+
 
 -- data Utility = Util Float
 --   deriving (Show, Eq)
