@@ -154,8 +154,8 @@ vL Ingroup [ProVax,AntiCorp] = -100
 vL Ingroup [AntiVax,ProCorp] = 100
 vL Ingroup [AntiVax,AntiCorp] = 100
 
-vL Naive [ProVax,ProCorp] = 75
-vL Naive [ProVax,AntiCorp] = 75
+vL Naive [ProVax,ProCorp] = 100
+vL Naive [ProVax,AntiCorp] = 100
 vL Naive [AntiVax,ProCorp] = -100
 vL Naive [AntiVax,AntiCorp] = -100
 
