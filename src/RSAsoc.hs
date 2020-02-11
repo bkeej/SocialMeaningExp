@@ -165,8 +165,11 @@ vL Savvy x = vL Naive x
 --   deriving (Show, Eq)
 
 uSoc :: Message -> Persona -> Group -> Lexicon -> Float
-uSoc m p g l = log pr + vL g p * pr + vS p * pr
+uSoc m p g l = pr + (vL g p * pr) + (vS p * pr)
   where Sum pr = sum $ [x | Mass x (Just y) <- runMassT (runMaybeT (RSAsoc.listener 1 g m eval)), y == p]
+
+uSocM :: Message -> Group -> Lexicon -> Float
+uSocM m g l = sum $ map (\p -> uSoc m p g l) field
 
 -- Audiences
 type Audience = [Group]
@@ -187,7 +190,7 @@ mostlyNaive = audience 3 1 6
 
 mostlySavvy = audience 3 6 1
 
--- disp_util a = [uSSoc a m p eval | p <- field, m <- [BigPharma ..]]   
+disp_util a = [uSSoc a m p eval | p <- field, m <- [BigPharma ..]]   
 
 disp_s n g = sequence_ (map print test)
   where test = [pretty w (speaker n g w eval)   | w <- field]
