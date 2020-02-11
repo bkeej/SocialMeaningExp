@@ -141,6 +141,7 @@ modify f mx = MaybeT (MassT f'd)
 
 -- Affective values, here initialized with 0
 
+-- Speaker is a politician, i.e., no preference for persona, only want to maximize listener approval.
 vS :: Persona -> Float
 vS [ProVax,ProCorp] = 0
 vS [ProVax,AntiCorp] = 0
@@ -154,34 +155,34 @@ vL Ingroup [ProVax,AntiCorp] = -100
 vL Ingroup [AntiVax,ProCorp] = 100
 vL Ingroup [AntiVax,AntiCorp] = 100
 
-vL Naive [ProVax,ProCorp] = 100
+-- Naive and Savvy audiences punish anti-vaxers and prefer anti-corporate ones
+vL Naive [ProVax,ProCorp] = 75
 vL Naive [ProVax,AntiCorp] = 100
 vL Naive [AntiVax,ProCorp] = -100
 vL Naive [AntiVax,AntiCorp] = -100
 
 vL Savvy x = vL Naive x
 
--- vL Savvy [ProVax,ProCorp] = 100
--- vL Savvy [ProVax,AntiCorp] = 100
--- vL Savvy [AntiVax,ProCorp] = -100
--- vL Savvy [AntiVax,AntiCorp] = -100
-
-
--- data Utility = Util Float
---   deriving (Show, Eq)
-
+-- Social utility calculation
 uSoc :: Message -> Persona -> Group -> Lexicon -> Float
 uSoc m p g l = pr + (vL g p * pr) + (vS p * pr)
   where Sum pr = sum $ [x | Mass x (Just y) <- runMassT (runMaybeT (RSAsoc.listener 1 g m eval)), y == p]
 
+
+-- Social utility for a message suming over all personas
 uSocM :: Message -> Group -> Lexicon -> Float
 uSocM m g l = sum $ map (\p -> uSoc m p g l) field
 
 -- Audiences
 type Audience = [Group]
 
-uSSoc :: Audience -> Message -> Persona -> Lexicon -> Float
-uSSoc a m p l = sum $ map (\g -> uSoc m p g l) a 
+-- Social utility expecting an audience argument
+uASoc :: Audience -> Message -> Persona -> Lexicon -> Float
+uSumSoc a m p l = sum $ map (\g -> uSoc m p g l) a 
+
+-- Social utility for a message suming over all personas expecting an audience argument
+uASocM :: Audience -> Message -> Lexicon -> Float
+uASocM a m l = sum $ map (\g -> uSocM m g l) a 
 
 -- Structured Audiences
 
@@ -192,9 +193,9 @@ audience x y z = take x (repeat Ingroup) ++ take y (repeat Savvy) ++ take z (rep
 -- Testing the model
 --
 
-mostlyNaive = audience 3 1 6
+mostlyNaive = audience 5 1 6
 
-mostlySavvy = audience 3 6 1
+mostlySavvy = audience 5 6 1
 
 disp_util a = [uSSoc a m p eval | p <- field, m <- [BigPharma ..]]   
 
