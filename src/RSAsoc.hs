@@ -62,7 +62,7 @@ field = personae indices
 data Message = BigPharma | CorpSci
   deriving (Show, Eq, Enum)
 
-data Group = Ingroup | Naive | Savvy | Uniform
+data Group = Ingroup | Naive | Savvy
   deriving (Show, Eq, Enum)
 
 type Denotation = Message -> [Feature]
@@ -86,7 +86,6 @@ personaPrior g = weighted [Mass 5 [ProVax,ProCorp], Mass 40 [ProVax,AntiCorp], M
 -- personaPrior Ingroup = uniform field
 -- personaPrior Savvy = uniform field
 -- personaPrior Naive = uniform field
--- personaPrior Uniform = uniform field
 
 messagePrior :: Dist m => Group -> Persona -> m Message
 messagePrior Ingroup [AntiVax, AntiCorp] = weighted [Mass 80 BigPharma, Mass 10 CorpSci]
@@ -103,13 +102,6 @@ messagePrior Naive [AntiVax, AntiCorp] = weighted [Mass 15 BigPharma, Mass 10 Co
 messagePrior Naive [AntiVax, ProCorp] = weighted [Mass 10 BigPharma, Mass 10 CorpSci]
 messagePrior Naive [ProVax, AntiCorp] = weighted [Mass 70 BigPharma, Mass 80 CorpSci]
 messagePrior Naive [ProVax, ProCorp] = weighted [Mass 0 BigPharma, Mass 60 CorpSci]
-
-messagePrior Uniform x = uniform [BigPharma ..]
-
-
-
--- messagePrior Uniform [AntiVax, AntiCorp] = weighted [Mass 10 BigPharma, Mass 90 CorpSci]
-
 --
 -- Mutually recursive pragmatic reasoning
 --
@@ -151,13 +143,14 @@ vS [AntiVax,ProCorp] = 0
 vS [AntiVax,AntiCorp] = 0
 
 
+-- Ingroup audiences punish pro-vaxers and prefer anti-corporate ones.
+-- Naive and Savvy audiences punish anti-vaxers and prefer anti-corporate ones
 vL :: Group -> Persona -> Float
 vL Ingroup [ProVax,ProCorp] = -100
 vL Ingroup [ProVax,AntiCorp] = -100
-vL Ingroup [AntiVax,ProCorp] = 100
+vL Ingroup [AntiVax,ProCorp] = 75
 vL Ingroup [AntiVax,AntiCorp] = 100
 
--- Naive and Savvy audiences punish anti-vaxers and prefer anti-corporate ones
 vL Naive [ProVax,ProCorp] = 75
 vL Naive [ProVax,AntiCorp] = 100
 vL Naive [AntiVax,ProCorp] = -100
