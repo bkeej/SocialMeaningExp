@@ -74,13 +74,6 @@ deno CorpSci = [ProVax, AntiCorp]
 -- Across-the-board no-cost messages
 cost _ = 0
 
--- Affective values of personas for speakers and listeners
--- valueS :: Persona -> Group -> Int 
--- valueS = 
-
--- valueL :: Persona -> Group -> Int
--- valueL p g = 
-
 -- Higher values ~> more eager pragmatic reasoning
 temperature = 1 
 
@@ -89,7 +82,6 @@ personaPrior g = weighted [Mass 5 [ProVax,ProCorp], Mass 40 [ProVax,AntiCorp], M
 -- personaPrior Ingroup = uniform field
 -- personaPrior Savvy = uniform field
 -- personaPrior Naive = uniform field
-
 -- personaPrior Uniform = uniform field
 
 messagePrior :: Dist m => Group -> Persona -> m Message
@@ -116,10 +108,7 @@ messagePrior Uniform x = uniform [BigPharma ..]
 
 --
 -- Mutually recursive pragmatic reasoning
-
--- listener :: int -> Group -> Message -> Lexicon -> BDDist Persona
--- listener n g m sem = bayes $ do
-
+--
 
 speaker :: Int -> Group -> Persona -> Lexicon -> BDDist Message
 speaker n g p sem = bayes $ do
@@ -138,7 +127,19 @@ listener n g m sem = bayes $ do
   guard (m' == m)
   return p
 
--- Affective values
+-- Helper functions for scaling probabilities
+scaleProb :: Message -> BDDist a -> BDDist a
+scaleProb m = modify (exp . (temperature *) . subtract (cost m) . log)
+
+modify :: (Prob -> Prob) -> BDDist a -> BDDist a
+modify f mx = MaybeT (MassT f'd)
+  where f'd = [Mass (f n) x | Mass n x <- runMassT (runMaybeT mx)]
+
+--
+-- Social Utility Calculations
+--
+
+-- Affective values, here initialized with 0
 
 vS :: Persona -> Float
 vS [ProVax,ProCorp] = 0
@@ -160,15 +161,12 @@ vL Naive [AntiVax,AntiCorp] = 0
 
 vL Savvy x = vL Naive x
 
--- -- Utility
 -- data Utility = Util Float
 --   deriving (Show, Eq)
 
 uSoc :: Message -> Persona -> Group -> Lexicon -> Float
 uSoc m p g l = log pr + vL g p * pr + vS p * pr
   where Sum pr = [x | Mass x (Just y) <- runMassT (runMaybeT (RSAsoc.listener 1 g m eval)), y == p] !! 0
-
-
 
 -- Audiences
 type Audience = [Group]
@@ -178,26 +176,21 @@ uSSoc a m p l = sum $ map (\g -> uSoc m p g l) a
 
 -- Structured Audiences
 
-
-
-
--- Helper functions for scaling probabilities
-scaleProb :: Message -> BDDist a -> BDDist a
-scaleProb m = modify (exp . (temperature *) . subtract (cost m) . log)
-
-modify :: (Prob -> Prob) -> BDDist a -> BDDist a
-modify f mx = MaybeT (MassT f'd)
-  where f'd = [Mass (f n) x | Mass n x <- runMassT (runMaybeT mx)]
+audience :: Int -> Int -> Int -> Audience 
+audience x y z = take x (repeat Ingroup) ++ take y (repeat Savvy) ++ take z (repeat Naive)
 
 --
 -- Testing the model
 --
+
 
 disp_s n g = sequence_ (map print test)
   where test = [pretty w (speaker n g w eval)   | w <- field]
 
 disp_l n g = sequence_ (map print test)
   where test = [pretty m (listener n g m eval)  | m <- [BigPharma ..]]
+
+-- disp_util a = [uSSoc a m p l |  
 
 pretty o mx = "P(.|"++ show o ++"): "++ concat [show x ++" = "++ show (getSum
   n) ++", " | Mass n (Just x) <- runMassT (runMaybeT mx)]
