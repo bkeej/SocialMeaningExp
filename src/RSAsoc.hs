@@ -183,14 +183,17 @@ audience x y z = take x (repeat Ingroup) ++ take y (repeat Savvy) ++ take z (rep
 -- Testing the model
 --
 
+mostlyNaive = audience 3 1 6
+
+mostlySavvy = audience 3 6 1
+
+-- disp_util a = [uSSoc a m p eval | p <- field, m <- [BigPharma ..]]   
 
 disp_s n g = sequence_ (map print test)
   where test = [pretty w (speaker n g w eval)   | w <- field]
 
 disp_l n g = sequence_ (map print test)
   where test = [pretty m (listener n g m eval)  | m <- [BigPharma ..]]
-
--- disp_util a = [uSSoc a m p l |  
 
 pretty o mx = "P(.|"++ show o ++"): "++ concat [show x ++" = "++ show (getSum
   n) ++", " | Mass n (Just x) <- runMassT (runMaybeT mx)]
