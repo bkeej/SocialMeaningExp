@@ -1,13 +1,15 @@
--- This file has been generated from package.yaml by hpack version 0.17.1.
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.2.
 --
 -- see: https://github.com/sol/hpack
+--
+-- hash: 134992dfda1c3b03db1d023733dbe317bf068b75f99cf2cf8182966d1602818c
 
 name:           prob-tools
 version:        0.1.0.0
 description:    Please see the README on Github at <https://github.com/schar/prob-tools#readme>
 build-type:     Simple
-cabal-version:  >= 1.10
-
 extra-source-files:
     README.md
 
@@ -15,10 +17,10 @@ library
   hs-source-dirs:
       src
   build-depends:
-      base >= 4.7 && < 5
-    , transformers
-    , semiring-simple
+      base >=4.7 && <5
     , random
+    , semiring-simple
+    , transformers
   exposed-modules:
       Lexica
       LexicalUncertainty
@@ -26,19 +28,24 @@ library
       ModelTheory
       Prob
       RSA
+      RSAsoc
       Scalar
       Utils
+  other-modules:
+      Paths_prob_tools
   default-language: Haskell2010
 
 executable prob-tools-exe
   main-is: Main.hs
+  other-modules:
+      Paths_prob_tools
   hs-source-dirs:
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >= 4.7 && < 5
-    , transformers
-    , semiring-simple
-    , random
+      base >=4.7 && <5
     , prob-tools
+    , random
+    , semiring-simple
+    , transformers
   default-language: Haskell2010

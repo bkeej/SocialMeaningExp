@@ -3,3 +3,5 @@
 *.swo
 *.txt
 *~
+.stack-work/
+*.lock
